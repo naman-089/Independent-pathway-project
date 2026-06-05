@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { getAuthErrorMessage } from "../utils/errorMessages";
 
 const ROLES = [
   { value: "family",     label: "Family / Individual", icon: "🏠", desc: "Complete intake & track your pathway" },
@@ -41,7 +42,7 @@ export default function AuthPage() {
         redirect(role);
       }
     } catch (err) {
-      setError(err.message.replace("Firebase: ", "").replace(/\(.*\)/, "").trim());
+      setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -57,7 +58,8 @@ export default function AuthPage() {
         <p className="auth-sub">
           {mode === "login"
             ? "Sign in to access your Independence Pathway Platform"
-            : "Join the platform and start building your pathway to independence"}
+            : "Join the platform and start building your pathway to independence"
+        }
         </p>
 
         {error && <div className="alert alert-danger">{error}</div>}
@@ -67,7 +69,7 @@ export default function AuthPage() {
             <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 10 }}>
               I am signing up as a:
             </p>
-            <div className="role-picker" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
+            <div className="role-picker">
               {ROLES.map((r) => (
                 <div
                   key={r.value}

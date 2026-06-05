@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
@@ -24,6 +25,7 @@ const ADMIN_LINKS = [
 export default function Nav() {
   const { profile, logout } = useAuth();
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const links =
     profile?.role === "caseworker" ? CASEWORKER_LINKS :
@@ -34,24 +36,53 @@ export default function Nav() {
     profile?.role === "caseworker" ? "Caseworker" :
     profile?.role === "admin"      ? "Admin" : "Family";
 
+  function close() { setMenuOpen(false); }
+
   return (
-    <nav className="nav">
-      <div className="nav-brand">IP<em>P</em></div>
-      <div className="nav-links">
-        <span className="nav-role-badge">{roleLabel}</span>
-        {links.map((l) => (
-          <Link
-            key={l.to}
-            to={l.to}
-            className={`nav-link${location.pathname === l.to ? " active" : ""}`}
-          >
-            {l.label}
-          </Link>
-        ))}
-        <button className="nav-link danger" onClick={logout}>
-          Sign out
+    <>
+      <nav className="nav">
+        <div className="nav-brand">IP<em>P</em></div>
+        <button
+          className="nav-hamburger"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-label="Toggle menu"
+        >
+          {menuOpen ? "✕" : "☰"}
         </button>
-      </div>
-    </nav>
+        <div className="nav-links">
+          <span className="nav-role-badge">{roleLabel}</span>
+          {links.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className={`nav-link${location.pathname === l.to ? " active" : ""}`}
+            >
+              {l.label}
+            </Link>
+          ))}
+          <button className="nav-link danger" onClick={logout}>
+            Sign out
+          </button>
+        </div>
+      </nav>
+      {menuOpen && (
+        <div className="nav-mobile-menu">
+          <span className="nav-role-badge" style={{ marginBottom: 6, alignSelf: "flex-start" }}>{roleLabel}</span>
+          {links.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className={`nav-link${location.pathname === l.to ? " active" : ""}`}
+              onClick={close}
+            >
+              {l.label}
+            </Link>
+          ))}
+          <button className="nav-link danger" onClick={() => { logout(); close(); }}>
+            Sign out
+          </button>
+        </div>
+      )}
+    </>
   );
 }

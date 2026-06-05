@@ -496,12 +496,50 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
 @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 @keyframes spin { to { transform:rotate(360deg); } }
 
+/* ── NAV HAMBURGER ── */
+.nav-hamburger {
+  display: none;
+  background: none; border: none;
+  color: var(--white); font-size: 22px;
+  padding: 4px 8px; line-height: 1;
+}
+.nav-mobile-menu {
+  display: none;
+  background: var(--navy-light);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 12px 16px;
+  flex-direction: column; gap: 2px;
+}
+
 /* ── RESPONSIVE ── */
 @media(max-width:640px) {
   .page, .page-wide { padding: 20px 16px; }
   .nav { padding: 0 16px; }
+  .nav-hamburger { display: block; }
+  .nav-links { display: none; }
+  .nav-mobile-menu { display: flex; }
+  .nav-mobile-menu .nav-link { text-align: left; }
+
   .hero { padding: 32px 24px; }
   .auth-card { padding: 32px 24px; }
   .role-picker { grid-template-columns: 1fr; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
+
+  /* tables scroll horizontally instead of clipping */
+  .data-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* timeline header stacks on very small screens */
+  .tl-header { flex-wrap: wrap; }
+  .progress-ring { margin-left: 0; width: 100%; text-align: left; }
+
+  /* milestone badge wraps below content instead of overflowing */
+  .milestone { flex-wrap: wrap; }
+  .m-badge { margin-left: 0; }
+
+  /* resource card stacks vertically */
+  .resource-card { flex-direction: column; }
+  .resource-logo { width: 44px; height: 44px; }
+
+  /* modal full-width on small screens */
+  .modal { padding: 24px 18px; }
 }

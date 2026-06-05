@@ -93,7 +93,7 @@ export default function FamilyDetail() {
       {saved && <div className="alert alert-success">Match saved successfully.</div>}
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid var(--border)", paddingBottom: 0 }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid var(--border)", paddingBottom: 0, overflowX: "auto" }}>
         {TABS.map((t) => (
           <button
             key={t}
