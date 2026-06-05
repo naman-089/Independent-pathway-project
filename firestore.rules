@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() { return request.auth != null; }
+    function getRole() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
+    function isFamily()     { return isSignedIn() && getRole() == 'family'; }
+    function isCaseworker() { return isSignedIn() && getRole() == 'caseworker'; }
+    function isAdmin()      { return isSignedIn() && getRole() == 'admin'; }
+    function isStaff()      { return isSignedIn() && (getRole() == 'caseworker' || getRole() == 'admin'); }
+
+    // Users — can read own, staff can read all
+    match /users/{uid} {
+      allow read:  if isSignedIn() && (request.auth.uid == uid || isStaff());
+      allow write: if isSignedIn() && request.auth.uid == uid;
+      allow create: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Intakes — families write own, staff can read all
+    match /intakes/{uid} {
+      allow read:  if isSignedIn() && (request.auth.uid == uid || isStaff());
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Matches — caseworkers write, families can read own
+    match /matches/{uid} {
+      allow read:  if isSignedIn() && (request.auth.uid == uid || isStaff());
+      allow write: if isCaseworker() || isAdmin();
+    }
+
+    // Organizations — all signed-in users can read, only admin can write
+    match /organizations/{orgId} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}
