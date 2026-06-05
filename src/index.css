@@ -51,6 +51,7 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   z-index: 9999;
+  overflow: hidden;
   transition: opacity 0.8s ease, transform 0.8s ease;
 }
 .splash.exit { opacity: 0; transform: translateY(-20px); pointer-events: none; }
@@ -74,32 +75,32 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
   display: inline-block;
   opacity: 0; transform: translateY(40px);
 }
-.splash-word:nth-child(1) { animation: wordUp 0.5s cubic-bezier(0.22,1,0.36,1) 0.55s forwards; }
-.splash-word:nth-child(2) { animation: wordUp 0.5s cubic-bezier(0.22,1,0.36,1) 0.72s forwards; color: var(--accent); }
-.splash-word:nth-child(3) { animation: wordUp 0.5s cubic-bezier(0.22,1,0.36,1) 0.89s forwards; }
+.splash-word:nth-child(1) { animation: wordUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.4s forwards; }
+.splash-word:nth-child(2) { animation: wordUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.52s forwards; color: var(--accent); }
+.splash-word:nth-child(3) { animation: wordUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.64s forwards; }
 
 .splash-sub {
   font-size: 15px; color: var(--gray); font-weight: 300;
   text-align: center; padding: 0 24px;
-  opacity: 0; animation: fadeUp 0.6s ease 1.3s forwards;
+  opacity: 0; animation: fadeUp 0.5s ease 0.9s forwards;
   margin-bottom: 40px;
 }
 .splash-bar {
   width: 200px; height: 2px;
   background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;
-  opacity: 0; animation: fadeUp 0.4s ease 1.5s forwards;
+  opacity: 0; animation: fadeUp 0.4s ease 1.1s forwards;
   margin-bottom: 32px;
 }
 .splash-bar-fill {
   height: 100%; background: var(--accent);
-  width: 0; animation: barFill 1.2s ease 1.7s forwards; border-radius: 2px;
+  width: 0; animation: barFill 0.7s ease 1.3s forwards; border-radius: 2px;
 }
 .splash-btn {
   padding: 14px 36px;
   background: var(--accent); color: var(--navy);
   border: none; border-radius: 50px;
   font-size: 15px; font-weight: 500; letter-spacing: 0.3px;
-  opacity: 0; animation: fadeUp 0.5s ease 3.1s forwards;
+  opacity: 0; animation: fadeUp 0.5s ease 2.0s forwards;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .splash-btn:hover { transform: scale(1.04); box-shadow: 0 0 32px rgba(2,195,154,0.3); }
@@ -525,8 +526,21 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
   .role-picker { grid-template-columns: 1fr; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
 
-  /* tables scroll horizontally instead of clipping */
-  .data-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* tables reflow as stacked cards — no horizontal scroll */
+  .data-table, .data-table tbody, .data-table tr { display: block; width: 100%; }
+  .data-table thead { display: none; }
+  .data-table tr {
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .data-table td {
+    display: block;
+    border: none;
+    padding: 3px 0;
+    font-size: 13px;
+  }
 
   /* timeline header stacks on very small screens */
   .tl-header { flex-wrap: wrap; }
@@ -542,4 +556,9 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
   /* modal full-width on small screens */
   .modal { padding: 24px 18px; }
+
+  /* splash — scale down decos so they don't bleed */
+  .splash-deco-1 { width: 240px; height: 240px; top: -80px; right: -80px; }
+  .splash-deco-2 { width: 160px; height: 160px; bottom: -50px; left: -50px; }
+  .splash-btn { padding: 14px 28px; }
 }

@@ -16,7 +16,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Unblock the UI after 5s in case Firebase never responds (poor connection)
+    const timeout = setTimeout(() => setLoading(false), 5000);
+
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(timeout);
       if (firebaseUser) {
         setUser(firebaseUser);
         const snap = await getDoc(doc(db, "users", firebaseUser.uid));
@@ -27,7 +31,7 @@ export function AuthProvider({ children }) {
       }
       setLoading(false);
     });
-    return unsub;
+    return () => { unsub(); clearTimeout(timeout); };
   }, []);
 
   async function signup(email, password, role, displayName) {
