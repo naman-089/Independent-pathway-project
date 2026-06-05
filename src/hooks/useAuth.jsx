@@ -7,6 +7,8 @@ import {
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
+  sendPasswordResetEmail,
+  updateProfile as firebaseUpdateProfile,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
@@ -63,8 +65,18 @@ export function AuthProvider({ children }) {
     await signOut(auth);
   }
 
+  async function resetPassword(email) {
+    await sendPasswordResetEmail(auth, email);
+  }
+
+  async function updateDisplayName(newName) {
+    await firebaseUpdateProfile(auth.currentUser, { displayName: newName });
+    await setDoc(doc(db, "users", user.uid), { displayName: newName }, { merge: true });
+    setProfile((p) => ({ ...p, displayName: newName }));
+  }
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signup, login, logout }}>
+    <AuthContext.Provider value={{ user, profile, loading, signup, login, logout, resetPassword, updateDisplayName }}>
       {children}
     </AuthContext.Provider>
   );

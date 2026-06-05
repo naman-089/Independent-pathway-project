@@ -488,7 +488,30 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
 .modal h3 { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
 .modal-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
 
+/* ── SKELETON ── */
+.skeleton {
+  background: linear-gradient(90deg, #e4eff2 25%, #cde0e7 50%, #e4eff2 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: var(--radius-sm);
+  display: block;
+}
+
+/* ── FOCUS ── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.chip:focus-visible,
+.role-option:focus-visible,
+.filter-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* ── ANIMATIONS ── */
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 @keyframes wordUp { to { opacity:1; transform:translateY(0); } }
 @keyframes barFill { to { width:100%; } }

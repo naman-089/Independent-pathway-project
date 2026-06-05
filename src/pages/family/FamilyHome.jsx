@@ -1,14 +1,36 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { IconClipboardList, IconMap2, IconUserCircle, IconBuildingCommunity } from "@tabler/icons-react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 export default function FamilyHome() {
-  const { profile } = useAuth();
-  const navigate    = useNavigate();
-  const name        = profile?.displayName?.split(" ")[0] || "there";
+  const { profile, user } = useAuth();
+  const navigate          = useNavigate();
+  const name              = profile?.displayName?.split(" ")[0] || "there";
+  const [match, setMatch] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    getDoc(doc(db, "matches", user.uid))
+      .then((snap) => { if (snap.exists()) setMatch(snap.data()); })
+      .catch(() => {});
+  }, [user]);
 
   return (
     <div className="page">
+      {match && (
+        <div className="alert alert-success" style={{ marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+          <span>
+            Your caseworker confirmed a match: <strong>{match.orgName}</strong> ({match.score}% compatibility)
+          </span>
+          <button className="btn btn-sm btn-secondary" onClick={() => navigate("/family/resources")}>
+            View Resources →
+          </button>
+        </div>
+      )}
+
       <div className="hero">
         <div className="hero-deco hero-deco-1" />
         <div className="hero-deco hero-deco-2" />

@@ -2,29 +2,49 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Any signed-in user can read/write their own user doc
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Reads the caller's role from their user doc (cached by Firestore rules engine)
+    function callerRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isCaseworker() { return isSignedIn() && callerRole() == "caseworker"; }
+    function isAdmin()      { return isSignedIn() && callerRole() == "admin"; }
+    function isStaff()      { return isCaseworker() || isAdmin(); }
+
+    // ── Users ──────────────────────────────────────────────────────────────
+    // Families read/write their own doc; staff can read all users.
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-      // Staff (caseworker/admin) can read all user docs
-      allow read: if request.auth != null;
+      allow read:  if isOwner(uid) || isStaff();
+      allow write: if isOwner(uid);
     }
 
-    // Intakes — owner can read/write, any signed-in user can read (caseworkers need this)
+    // ── Intakes ────────────────────────────────────────────────────────────
+    // Families read/write their own intake; staff can read all intakes.
     match /intakes/{uid} {
-      allow read:  if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow read:  if isOwner(uid) || isStaff();
+      allow write: if isOwner(uid);
     }
 
-    // Matches — any signed-in user can read, any signed-in user can write
-    // (caseworkers confirm matches; for demo we keep it open)
+    // ── Matches ────────────────────────────────────────────────────────────
+    // Families read their own match; caseworkers/admins read & write all.
     match /matches/{uid} {
-      allow read, write: if request.auth != null;
+      allow read:  if isOwner(uid) || isStaff();
+      allow write: if isStaff();
     }
 
-    // Organizations — any signed-in user can read, any signed-in user can write
-    // (tighten to admin-only after demo if needed)
+    // ── Organizations ──────────────────────────────────────────────────────
+    // Any signed-in user can read; only admins can create/update/delete.
     match /organizations/{orgId} {
-      allow read, write: if request.auth != null;
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }

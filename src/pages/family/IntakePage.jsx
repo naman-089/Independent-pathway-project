@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -41,6 +41,24 @@ const REGIONS = [
   "Other Ontario",
 ];
 
+const EMPTY_FORM = {
+  individualName: "",
+  individualAge:  "",
+  caregiverName:  "",
+  livingSituation: "",
+  visionStatement: "",
+  priorities: [],
+  skills: { cooking: "", budgeting: "", transit: "", medication: "", hygiene: "", communication: "" },
+  sdmInPlace:      "",
+  odspRegistered:  "",
+  hensonTrust:     "",
+  legalNotes:      "",
+  supportLevel:       "",
+  housingPreferences: [],
+  preferredRegion:    "",
+  additionalNotes:    "",
+};
+
 function SkillSelect({ label, field, value, onChange }) {
   return (
     <div className="field">
@@ -57,7 +75,14 @@ function SkillSelect({ label, field, value, onChange }) {
 
 function Chip({ label, selected, onToggle }) {
   return (
-    <div className={`chip${selected ? " selected" : ""}`} onClick={onToggle}>
+    <div
+      className={`chip${selected ? " selected" : ""}`}
+      onClick={onToggle}
+      onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); onToggle(); } }}
+      tabIndex={0}
+      role="checkbox"
+      aria-checked={selected}
+    >
       {label}
     </div>
   );
@@ -67,69 +92,90 @@ export default function IntakePage() {
   const { user, profile } = useAuth();
   const navigate          = useNavigate();
   const [step, setStep]   = useState(1);
-  const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState("");
+  const [saving, setSaving]     = useState(false);
+  const [loadingDraft, setLoadingDraft] = useState(true);
+  const [existingStatus, setExistingStatus] = useState(null);
+  const [error, setError]       = useState("");
 
-  const [form, setForm] = useState({
-    // Step 1 – About
-    individualName: profile?.displayName || "",
-    individualAge:  "",
-    caregiverName:  "",
-    livingSituation: "",
-    // Step 2 – Vision
-    visionStatement: "",
-    priorities: [],
-    // Step 3 – Skills
-    skills: {
-      cooking: "", budgeting: "", transit: "",
-      medication: "", hygiene: "", communication: "",
-    },
-    // Step 4 – Legal & Financial
-    sdmInPlace:      "",
-    odspRegistered:  false,
-    hensonTrust:     "",
-    legalNotes:      "",
-    // Step 5 – Support
-    supportLevel:       "",
-    housingPreferences: [],
-    preferredRegion:    "",
-    additionalNotes:    "",
-  });
+  const [form, setForm] = useState({ ...EMPTY_FORM, individualName: profile?.displayName || "" });
+
+  // Load any existing draft or submission on mount
+  useEffect(() => {
+    async function loadDraft() {
+      try {
+        const snap = await getDoc(doc(db, "intakes", user.uid));
+        if (snap.exists()) {
+          const data = snap.data();
+          setExistingStatus(data.status || "draft");
+          setForm({
+            individualName:     data.individualName  || profile?.displayName || "",
+            individualAge:      data.individualAge   || "",
+            caregiverName:      data.caregiverName   || "",
+            livingSituation:    data.livingSituation || "",
+            visionStatement:    data.visionStatement || "",
+            priorities:         data.priorities      || [],
+            skills:             data.skills          || EMPTY_FORM.skills,
+            sdmInPlace:         data.sdmInPlace      || "",
+            odspRegistered:     data.odspRegistered  || "",
+            hensonTrust:        data.hensonTrust     || "",
+            legalNotes:         data.legalNotes      || "",
+            supportLevel:       data.supportLevel    || "",
+            housingPreferences: data.housingPreferences || [],
+            preferredRegion:    data.preferredRegion || "",
+            additionalNotes:    data.additionalNotes || "",
+          });
+        }
+      } catch (err) {
+        console.warn("Could not load draft:", err);
+      } finally {
+        setLoadingDraft(false);
+      }
+    }
+    loadDraft();
+  }, [user.uid]);
 
   const TOTAL_STEPS = 5;
   const progress = (step / TOTAL_STEPS) * 100;
 
-  function setField(key, value) {
-    setForm((f) => ({ ...f, [key]: value }));
-  }
-
-  function setSkill(field, value) {
-    setForm((f) => ({ ...f, skills: { ...f.skills, [field]: value } }));
-  }
-
+  function setField(key, value) { setForm((f) => ({ ...f, [key]: value })); }
+  function setSkill(field, value) { setForm((f) => ({ ...f, skills: { ...f.skills, [field]: value } })); }
   function toggleArr(key, value) {
     setForm((f) => ({
       ...f,
-      [key]: f[key].includes(value)
-        ? f[key].filter((v) => v !== value)
-        : [...f[key], value],
+      [key]: f[key].includes(value) ? f[key].filter((v) => v !== value) : [...f[key], value],
     }));
   }
 
-  function nextStep() { setStep((s) => Math.min(s + 1, TOTAL_STEPS)); window.scrollTo(0,0); }
-  function prevStep() { setStep((s) => Math.max(s - 1, 1)); window.scrollTo(0,0); }
+  function saveDraft(currentForm) {
+    // Fire-and-forget draft save — doesn't block navigation
+    setDoc(
+      doc(db, "intakes", user.uid),
+      { ...currentForm, uid: user.uid, status: existingStatus === "submitted" ? "submitted" : "draft", savedAt: serverTimestamp() },
+      { merge: true }
+    ).catch(console.warn);
+  }
+
+  function nextStep() {
+    saveDraft(form);
+    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+    window.scrollTo(0, 0);
+  }
+
+  function prevStep() {
+    saveDraft(form);
+    setStep((s) => Math.max(s - 1, 1));
+    window.scrollTo(0, 0);
+  }
 
   async function handleSubmit() {
     setSaving(true); setError("");
     try {
-      const intakeData = {
+      await setDoc(doc(db, "intakes", user.uid), {
         ...form,
-        uid:        user.uid,
+        uid:         user.uid,
         submittedAt: serverTimestamp(),
-        status:     "submitted",
-      };
-      await setDoc(doc(db, "intakes", user.uid), intakeData);
-      // mark user profile as intake complete
+        status:      "submitted",
+      });
       await setDoc(doc(db, "users", user.uid), { intakeComplete: true }, { merge: true });
       navigate("/family/timeline");
     } catch (err) {
@@ -139,6 +185,10 @@ export default function IntakePage() {
     }
   }
 
+  if (loadingDraft) return <div className="loading-center"><div className="spinner" /></div>;
+
+  const isEditing = existingStatus === "submitted";
+
   return (
     <div className="page">
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
@@ -146,15 +196,18 @@ export default function IntakePage() {
           <div className="intake-progress-fill" style={{ width: `${progress}%` }} />
         </div>
 
+        {isEditing && (
+          <div className="alert alert-warn" style={{ marginBottom: 20 }}>
+            You're editing a submitted intake. Changes will update your timeline and matches.
+          </div>
+        )}
+
         {/* ── STEP 1 ── */}
         {step === 1 && (
           <div>
             <p className="step-eyebrow">Step 1 of 5 — About You</p>
             <h2 className="step-title">Let's start with the basics</h2>
-            <p className="step-sub">
-              This profile helps us personalize your pathway. All information is
-              private and shared only with your caseworker.
-            </p>
+            <p className="step-sub">This profile helps us personalize your pathway. All information is private and shared only with your caseworker.</p>
             <div className="field">
               <label>Individual's full name</label>
               <input type="text" placeholder="e.g. Jordan Chen" value={form.individualName} onChange={(e) => setField("individualName", e.target.value)} />
@@ -189,27 +242,17 @@ export default function IntakePage() {
           <div>
             <p className="step-eyebrow">Step 2 of 5 — Vision & Goals</p>
             <h2 className="step-title">What does independence look like?</h2>
-            <p className="step-sub">
-              There's no single definition. Tell us what matters most — we'll
-              shape the pathway around it.
-            </p>
+            <p className="step-sub">There's no single definition. Tell us what matters most — we'll shape the pathway around it.</p>
             <div className="field">
               <label>Describe your vision for independent living</label>
-              <textarea
-                placeholder="e.g. I want to have my own apartment, cook my own meals, go to work..."
-                value={form.visionStatement}
-                onChange={(e) => setField("visionStatement", e.target.value)}
-              />
+              <textarea placeholder="e.g. I want to have my own apartment, cook my own meals, go to work..."
+                value={form.visionStatement} onChange={(e) => setField("visionStatement", e.target.value)} />
             </div>
             <div className="field">
               <label>What matters most in daily life? (select all that apply)</label>
               <div className="chip-group">
                 {PRIORITIES.map((p) => (
-                  <Chip
-                    key={p} label={p}
-                    selected={form.priorities.includes(p)}
-                    onToggle={() => toggleArr("priorities", p)}
-                  />
+                  <Chip key={p} label={p} selected={form.priorities.includes(p)} onToggle={() => toggleArr("priorities", p)} />
                 ))}
               </div>
             </div>
@@ -225,16 +268,13 @@ export default function IntakePage() {
           <div>
             <p className="step-eyebrow">Step 3 of 5 — Life Skills</p>
             <h2 className="step-title">Everyday independence skills</h2>
-            <p className="step-sub">
-              Rate your current comfort level. There are no wrong answers —
-              this builds your readiness score and shapes your milestones.
-            </p>
-            <SkillSelect label="Cooking & meal preparation" field="cooking"       value={form.skills.cooking}       onChange={setSkill} />
-            <SkillSelect label="Managing money & budgeting"  field="budgeting"    value={form.skills.budgeting}     onChange={setSkill} />
-            <SkillSelect label="Using public transportation"  field="transit"     value={form.skills.transit}       onChange={setSkill} />
-            <SkillSelect label="Managing health & medications" field="medication" value={form.skills.medication}    onChange={setSkill} />
-            <SkillSelect label="Personal hygiene & self-care" field="hygiene"    value={form.skills.hygiene}       onChange={setSkill} />
-            <SkillSelect label="Communication & social skills" field="communication" value={form.skills.communication} onChange={setSkill} />
+            <p className="step-sub">Rate your current comfort level. There are no wrong answers — this builds your readiness score and shapes your milestones.</p>
+            <SkillSelect label="Cooking & meal preparation"     field="cooking"        value={form.skills.cooking}        onChange={setSkill} />
+            <SkillSelect label="Managing money & budgeting"     field="budgeting"      value={form.skills.budgeting}      onChange={setSkill} />
+            <SkillSelect label="Using public transportation"    field="transit"        value={form.skills.transit}        onChange={setSkill} />
+            <SkillSelect label="Managing health & medications"  field="medication"     value={form.skills.medication}     onChange={setSkill} />
+            <SkillSelect label="Personal hygiene & self-care"   field="hygiene"        value={form.skills.hygiene}        onChange={setSkill} />
+            <SkillSelect label="Communication & social skills"  field="communication"  value={form.skills.communication}  onChange={setSkill} />
             <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
               <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
               <button className="btn btn-primary" onClick={nextStep}>Continue →</button>
@@ -247,10 +287,7 @@ export default function IntakePage() {
           <div>
             <p className="step-eyebrow">Step 4 of 5 — Legal & Financial</p>
             <h2 className="step-title">Planning for the future</h2>
-            <p className="step-sub">
-              These questions help us add the right legal and financial
-              milestones to your personalized timeline.
-            </p>
+            <p className="step-sub">These questions help us add the right legal and financial milestones to your personalized timeline.</p>
             <div className="field">
               <label>Supported Decision-Making agreement or guardianship</label>
               <select value={form.sdmInPlace} onChange={(e) => setField("sdmInPlace", e.target.value)}>
@@ -297,10 +334,7 @@ export default function IntakePage() {
           <div>
             <p className="step-eyebrow">Step 5 of 5 — Support Needs</p>
             <h2 className="step-title">What support looks like for you</h2>
-            <p className="step-sub">
-              This is what drives our matching algorithm — the more accurate,
-              the better your organization matches will be.
-            </p>
+            <p className="step-sub">This is what drives our matching algorithm — the more accurate, the better your organization matches will be.</p>
             <div className="field">
               <label>Level of daily support needed</label>
               <select value={form.supportLevel} onChange={(e) => setField("supportLevel", e.target.value)}>
@@ -314,11 +348,7 @@ export default function IntakePage() {
               <label>Preferred type of housing (select all that apply)</label>
               <div className="chip-group">
                 {HOUSING_TYPES.map((h) => (
-                  <Chip
-                    key={h} label={h}
-                    selected={form.housingPreferences.includes(h)}
-                    onToggle={() => toggleArr("housingPreferences", h)}
-                  />
+                  <Chip key={h} label={h} selected={form.housingPreferences.includes(h)} onToggle={() => toggleArr("housingPreferences", h)} />
                 ))}
               </div>
             </div>
@@ -331,7 +361,7 @@ export default function IntakePage() {
             </div>
             <div className="field">
               <label>Anything else we should know?</label>
-              <textarea placeholder="e.g. Close to Jewish community, needs kosher meals, wants to be near family in North York..." value={form.additionalNotes} onChange={(e) => setField("additionalNotes", e.target.value)} />
+              <textarea placeholder="e.g. Close to Jewish community, needs kosher meals..." value={form.additionalNotes} onChange={(e) => setField("additionalNotes", e.target.value)} />
             </div>
 
             {error && <div className="alert alert-danger">{error}</div>}
@@ -339,7 +369,7 @@ export default function IntakePage() {
             <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
               <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
-                {saving ? "Saving…" : "Generate My Timeline →"}
+                {saving ? "Saving…" : isEditing ? "Update My Timeline →" : "Generate My Timeline →"}
               </button>
             </div>
           </div>

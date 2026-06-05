@@ -1,3 +1,4 @@
+import SkeletonPage from "../../components/Skeleton";
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../firebase";
@@ -36,7 +37,7 @@ export default function FamiliesList() {
     r.intake?.individualName?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <div className="loading-center"><div className="spinner" /></div>;
+  if (loading) return <SkeletonPage />;
 
   return (
     <div className="page-wide">

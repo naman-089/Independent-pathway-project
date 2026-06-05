@@ -1,3 +1,4 @@
+import SkeletonPage from "../../components/Skeleton";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, collection, getDocs, setDoc, serverTimestamp } from "firebase/firestore";
@@ -59,7 +60,7 @@ export default function FamilyDetail() {
     setTimeout(() => setSaved(false), 3000);
   }
 
-  if (loading) return <div className="loading-center"><div className="spinner" /></div>;
+  if (loading) return <SkeletonPage />;
 
   const readiness = computeReadinessScore(intake);
   const name = intake?.individualName || "—";
