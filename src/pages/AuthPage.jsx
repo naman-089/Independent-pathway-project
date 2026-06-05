@@ -15,6 +15,7 @@ export default function AuthPage() {
   const [password, setPassword]     = useState("");
   const [name, setName]             = useState("");
   const [role, setRole]             = useState("family");
+  const [remember, setRemember]     = useState(false);
   const [error, setError]           = useState("");
   const [loading, setLoading]       = useState(false);
   const { login, signup, profile }  = useAuth();
@@ -31,7 +32,7 @@ export default function AuthPage() {
     setError(""); setLoading(true);
     try {
       if (mode === "login") {
-        const cred = await login(email, password);
+        const cred = await login(email, password, remember);
         // profile is fetched in the login function; read it back
         const { getDoc: gd, doc: d2 } = await import("firebase/firestore");
         const { db: db2 } = await import("../firebase.js");
@@ -115,10 +116,21 @@ export default function AuthPage() {
             />
           </div>
 
+          {mode === "login" && (
+            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--text-muted)", marginBottom: 16, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                style={{ width: 15, height: 15, accentColor: "var(--accent)", cursor: "pointer" }}
+              />
+              Remember me on this device
+            </label>
+          )}
+
           <button
             type="submit"
             className="btn btn-primary btn-full"
-            style={{ marginTop: 8 }}
             disabled={loading}
           >
             {loading ? "Please wait…" : mode === "login" ? "Sign in →" : "Create account →"}

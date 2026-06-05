@@ -4,6 +4,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
@@ -48,7 +51,8 @@ export function AuthProvider({ children }) {
     return cred;
   }
 
-  async function login(email, password) {
+  async function login(email, password, remember = false) {
+    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const snap = await getDoc(doc(db, "users", cred.user.uid));
     if (snap.exists()) setProfile(snap.data());
