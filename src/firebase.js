@@ -3,20 +3,18 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // ─────────────────────────────────────────────────────────────────
-//  PASTE YOUR FIREBASE CONFIG HERE
-//  1. Go to https://console.firebase.google.com
-//  2. Create a project → Add app (web) → Copy the config below
-//  3. Enable Email/Password in Authentication → Sign-in methods
-//  4. Create a Firestore database (start in test mode for now)
+//  Firebase config — reads from environment variables.
+//
+//  LOCAL DEV:  create a .env file in the project root (see README)
+//  PRODUCTION: add these in Vercel → Settings → Environment Variables
 // ─────────────────────────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyDDlK6xJocsxBs_fkTDizKV2GuJ5rl1v98",
-  authDomain: "independence-pathway-project.firebaseapp.com",
-  projectId: "independence-pathway-project",
-  storageBucket: "independence-pathway-project.firebasestorage.app",
-  messagingSenderId: "2415083343",
-  appId: "1:2415083343:web:2271917fef7dd7737b8f3a",
-  measurementId: "G-Z2T0FX3KRH"
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);

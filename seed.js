@@ -22,13 +22,12 @@ import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp } from "
 
 // ─── PASTE YOUR FIREBASE CONFIG HERE ───────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyDDlK6xJocsxBs_fkTDizKV2GuJ5rl1v98",
-  authDomain: "independence-pathway-project.firebaseapp.com",
-  projectId: "independence-pathway-project",
-  storageBucket: "independence-pathway-project.firebasestorage.app",
-  messagingSenderId: "2415083343",
-  appId: "1:2415083343:web:2271917fef7dd7737b8f3a",
-  measurementId: "G-Z2T0FX3KRH"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID",
 };
 // ────────────────────────────────────────────────────────────────────
 
