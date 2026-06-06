@@ -10,7 +10,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // Reads the caller's role from their user doc (cached by Firestore rules engine)
     function callerRole() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
@@ -20,24 +19,35 @@ service cloud.firestore {
     function isStaff()      { return isCaseworker() || isAdmin(); }
 
     // ── Users ──────────────────────────────────────────────────────────────
-    // Families read/write their own doc; staff can read all users.
+    // Families read/write their own doc.
+    // Staff can read all users.
+    // Admins can also delete any user doc (used by the delete user feature).
     match /users/{uid} {
-      allow read:  if isOwner(uid) || isStaff();
-      allow write: if isOwner(uid);
+      allow read:   if isOwner(uid) || isStaff();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin() && request.auth.uid != uid; // can't delete yourself
     }
 
     // ── Intakes ────────────────────────────────────────────────────────────
-    // Families read/write their own intake; staff can read all intakes.
+    // Families read/write their own intake.
+    // Staff can read all intakes.
+    // Admins can delete any intake (cleanup when deleting a user).
     match /intakes/{uid} {
-      allow read:  if isOwner(uid) || isStaff();
-      allow write: if isOwner(uid);
+      allow read:   if isOwner(uid) || isStaff();
+      allow create,
+            update: if isOwner(uid);
+      allow delete: if isOwner(uid) || isAdmin();
     }
 
     // ── Matches ────────────────────────────────────────────────────────────
-    // Families read their own match; caseworkers/admins read & write all.
+    // Families read their own match.
+    // Caseworkers/admins read & write all matches.
+    // Admins can delete matches (cleanup when deleting a user).
     match /matches/{uid} {
-      allow read:  if isOwner(uid) || isStaff();
-      allow write: if isStaff();
+      allow read:   if isOwner(uid) || isStaff();
+      allow write:  if isStaff();
+      allow delete: if isAdmin();
     }
 
     // ── Organizations ──────────────────────────────────────────────────────

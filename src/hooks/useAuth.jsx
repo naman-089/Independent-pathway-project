@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -19,9 +19,11 @@ export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Prevents auto-signout during the brief window when a new account is being created
+  // and the Firestore user doc doesn't exist yet
+  const signingUpRef = useRef(false);
 
   useEffect(() => {
-    // Unblock the UI after 5s in case Firebase never responds (poor connection)
     const timeout = setTimeout(() => setLoading(false), 5000);
 
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -29,28 +31,45 @@ export function AuthProvider({ children }) {
       if (firebaseUser) {
         setUser(firebaseUser);
         const snap = await getDoc(doc(db, "users", firebaseUser.uid));
-        if (snap.exists()) setProfile(snap.data());
+        if (snap.exists()) {
+          setProfile(snap.data());
+          setLoading(false);
+        } else if (!signingUpRef.current) {
+          // Profile doc was deleted — sign the user out silently
+          await signOut(auth);
+          // The subsequent onAuthStateChanged(null) call will finish cleanup
+          return;
+        } else {
+          // Mid-signup: doc not created yet, profile will be set explicitly by signup()
+          setLoading(false);
+        }
       } else {
         setUser(null);
         setProfile(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
+
     return () => { unsub(); clearTimeout(timeout); };
   }, []);
 
   async function signup(email, password, role, displayName) {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    const profileData = {
-      uid: cred.user.uid,
-      email,
-      displayName,
-      role,           // "family" | "caseworker" | "admin"
-      createdAt: new Date().toISOString(),
-    };
-    await setDoc(doc(db, "users", cred.user.uid), profileData);
-    setProfile(profileData);
-    return cred;
+    signingUpRef.current = true;
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const profileData = {
+        uid: cred.user.uid,
+        email,
+        displayName,
+        role,
+        createdAt: new Date().toISOString(),
+      };
+      await setDoc(doc(db, "users", cred.user.uid), profileData);
+      setProfile(profileData);
+      return cred;
+    } finally {
+      signingUpRef.current = false;
+    }
   }
 
   async function login(email, password, remember = false) {

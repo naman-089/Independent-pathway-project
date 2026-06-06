@@ -1,3 +1,4 @@
+import SkeletonPage from "../../components/Skeleton";
 import { useEffect, useState } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
@@ -16,9 +17,17 @@ export default function TimelinePage() {
     async function load() {
       const snap = await getDoc(doc(db, "intakes", user.uid));
       if (!snap.exists()) { navigate("/family/intake"); return; }
-      const data = snap.data();
+      const data    = snap.data();
+      const saved   = data.milestoneStatuses || {};
+      const generated = generateTimeline(data).map((phase) => ({
+        ...phase,
+        items: phase.items.map((item) => ({
+          ...item,
+          status: saved[item.id] ?? item.status,
+        })),
+      }));
       setIntake(data);
-      setTimeline(generateTimeline(data));
+      setTimeline(generated);
       setLoading(false);
     }
     load();
@@ -42,7 +51,7 @@ export default function TimelinePage() {
     await updateDoc(doc(db, "intakes", user.uid), { milestoneStatuses: flat });
   }
 
-  if (loading) return <div className="loading-center"><div className="spinner" /></div>;
+  if (loading) return <SkeletonPage />;
 
   const readiness = computeReadinessScore(intake);
   const name = intake?.individualName || "Your";

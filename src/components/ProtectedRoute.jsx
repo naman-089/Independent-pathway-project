@@ -7,10 +7,14 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   if (loading) return <SkeletonPage />;
   if (!user)   return <Navigate to="/auth" replace />;
-  if (allowedRoles && !allowedRoles.includes(profile?.role)) {
-    // redirect to correct dashboard
-    if (profile?.role === "caseworker") return <Navigate to="/caseworker" replace />;
-    if (profile?.role === "admin")      return <Navigate to="/admin" replace />;
+
+  // User is authenticated but profile doc was deleted — show skeleton while
+  // useAuth's onAuthStateChanged auto-signs them out
+  if (!profile) return <SkeletonPage />;
+
+  if (allowedRoles && !allowedRoles.includes(profile.role)) {
+    if (profile.role === "caseworker") return <Navigate to="/caseworker" replace />;
+    if (profile.role === "admin")      return <Navigate to="/admin" replace />;
     return <Navigate to="/family" replace />;
   }
   return children;

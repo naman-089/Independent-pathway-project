@@ -9,6 +9,17 @@ const ROLES = [
   { value: "admin",      label: "Admin",                icon: "⚙️" },
 ];
 
+const STAFF_ROLES = new Set(["caseworker", "admin"]);
+
+function validateStaffCode(role, code) {
+  if (!STAFF_ROLES.has(role)) return true;
+  const expected =
+    role === "admin"
+      ? import.meta.env.VITE_ADMIN_CODE
+      : import.meta.env.VITE_CASEWORKER_CODE;
+  return expected && code === expected;
+}
+
 const TITLES = {
   login:  "Welcome back",
   signup: "Create your account",
@@ -26,6 +37,7 @@ export default function AuthPage() {
   const [password, setPassword]       = useState("");
   const [name, setName]               = useState("");
   const [role, setRole]               = useState("family");
+  const [staffCode, setStaffCode]     = useState("");
   const [remember, setRemember]       = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [resetSent, setResetSent]     = useState(false);
@@ -41,7 +53,7 @@ export default function AuthPage() {
     else navigate("/family");
   }
 
-  function switchMode(m) { setMode(m); setError(""); setResetSent(false); }
+  function switchMode(m) { setMode(m); setError(""); setResetSent(false); setStaffCode(""); }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -54,6 +66,11 @@ export default function AuthPage() {
         const snap = await gd(d2(db2, "users", cred.user.uid));
         redirect(snap.data()?.role || "family");
       } else {
+        if (!validateStaffCode(role, staffCode)) {
+          setError("Invalid access code for this role. Contact your administrator.");
+          setLoading(false);
+          return;
+        }
         await signup(email, password, role, name);
         redirect(role);
       }
@@ -148,6 +165,20 @@ export default function AuthPage() {
                 <label>Full name</label>
                 <input type="text" required placeholder="Your full name"
                   value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+            )}
+
+            {mode === "signup" && STAFF_ROLES.has(role) && (
+              <div className="field">
+                <label>Staff access code</label>
+                <input
+                  type="password" required
+                  placeholder="Enter your access code"
+                  value={staffCode}
+                  onChange={(e) => setStaffCode(e.target.value)}
+                  autoComplete="off"
+                />
+                <p className="field-hint">Required for caseworker and admin accounts. Contact your administrator.</p>
               </div>
             )}
 
