@@ -136,7 +136,16 @@ export default function ResourceDirectory() {
       {modal && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setModal(null)}>
           <div className="modal">
-            <h3>{modal === "add" ? "Add Organization" : `Edit: ${modal.name}`}</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+              <h3 style={{ margin: 0 }}>{modal === "add" ? "Add Organization" : `Edit: ${modal.name}`}</h3>
+              <button
+                onClick={() => setModal(null)}
+                style={{ background: "none", border: "none", fontSize: 22, lineHeight: 1, cursor: "pointer", color: "var(--text-muted)", padding: "0 0 0 12px" }}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
             <p className="modal-sub">This organization will appear in family resource matches based on the matching algorithm.</p>
 
             {error && <div className="alert alert-danger">{error}</div>}

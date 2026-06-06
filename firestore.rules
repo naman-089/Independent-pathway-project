@@ -35,8 +35,8 @@ service cloud.firestore {
     // Admins can delete any intake (cleanup when deleting a user).
     match /intakes/{uid} {
       allow read:   if isOwner(uid) || isStaff();
-      allow create,
-            update: if isOwner(uid);
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isStaff(); // caseworkers can update milestone verifications
       allow delete: if isOwner(uid) || isAdmin();
     }
 

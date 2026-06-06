@@ -120,3 +120,47 @@ export function generateTimeline(intake) {
       .map((m, i) => ({ ...m, status: i === 0 && phase.phaseKey === 1 ? "done" : "pending" })),
   }));
 }
+
+// IDs of milestones that can be auto-completed from intake data
+export const AUTO_MILESTONE_IDS = new Set(["m1", "m8", "m9"]);
+
+// Returns a map of { [milestoneId]: { status, auto, note } } for milestones
+// that are verifiable directly from the intake form data.
+export function getAutoStatuses(intake) {
+  if (!intake) return {};
+  const r = {};
+  if (intake.status === "submitted")
+    r["m1"] = { status: "done", auto: true, note: "Intake assessment submitted" };
+  if (intake.hensonTrust === "yes")
+    r["m8"] = { status: "done", auto: true, note: "Confirmed in intake: Henson Trust in place" };
+  if (intake.sdmInPlace === "yes")
+    r["m9"] = { status: "done", auto: true, note: "Confirmed in intake: SDM agreement in place" };
+  return r;
+}
+
+// Overlays saved + auto statuses onto a generated timeline array.
+// Auto milestones are marked locked=true so family users can't toggle them.
+// Caseworker-set fields (caseworkerVerified) are preserved over auto values.
+export function applyStatuses(generated, intake) {
+  const saved = (intake && intake.milestoneStatuses) || {};
+  const auto = getAutoStatuses(intake);
+  return generated.map((phase) => ({
+    ...phase,
+    items: phase.items.map((item) => {
+      const savedRaw = saved[item.id];
+      const savedObj = savedRaw
+        ? (typeof savedRaw === "string" ? { status: savedRaw } : savedRaw)
+        : null;
+      const autoObj = auto[item.id];
+      if (autoObj) {
+        return {
+          ...item,
+          ...autoObj,
+          ...(savedObj?.caseworkerVerified ? { caseworkerVerified: true } : {}),
+          locked: true,
+        };
+      }
+      return { ...item, ...(savedObj || {}) };
+    }),
+  }));
+}

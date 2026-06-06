@@ -1,9 +1,9 @@
 import SkeletonPage from "../../components/Skeleton";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { doc, getDoc, collection, getDocs, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase";
-import { computeReadinessScore, matchOrganizations, generateTimeline } from "../../utils/matching";
+import { computeReadinessScore, matchOrganizations, generateTimeline, applyStatuses } from "../../utils/matching";
 
 const SKILL_LABELS = { independent: "Independent", reminders: "With reminders", some_help: "With help", full_support: "Full support" };
 
@@ -32,7 +32,7 @@ export default function FamilyDetail() {
       const orgsData   = orgsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setIntake(intakeData);
       setMatches(matchOrganizations(intakeData, orgsData));
-      setTimeline(generateTimeline(intakeData));
+      setTimeline(applyStatuses(generateTimeline(intakeData), intakeData));
       if (matchSnap.exists()) {
         setConfirmedMatch(matchSnap.data());
         setMatchNote(matchSnap.data().note || "");
@@ -58,6 +58,37 @@ export default function FamilyDetail() {
     setSaved(true);
     setSaving(false);
     setTimeout(() => setSaved(false), 3000);
+  }
+
+  async function verifyMilestone(itemId, action) {
+    const currentStatuses = intake.milestoneStatuses || {};
+    const raw = currentStatuses[itemId];
+    const cur = raw ? (typeof raw === "string" ? { status: raw } : raw) : { status: "pending" };
+
+    let next;
+    if (action === "mark_done") {
+      next = { ...cur, status: "done", caseworkerVerified: true };
+    } else if (action === "verify") {
+      next = { ...cur, caseworkerVerified: true };
+    } else {
+      // unverify
+      next = { ...cur, caseworkerVerified: false };
+    }
+
+    const newStatuses = { ...currentStatuses, [itemId]: next };
+    await updateDoc(doc(db, "intakes", uid), { milestoneStatuses: newStatuses });
+    setIntake((prev) => ({ ...prev, milestoneStatuses: newStatuses }));
+    setTimeline((prev) =>
+      prev.map((phase) => ({
+        ...phase,
+        items: phase.items.map((itm) => {
+          if (itm.id !== itemId) return itm;
+          if (action === "mark_done") return { ...itm, status: "done", caseworkerVerified: true };
+          if (action === "verify")   return { ...itm, caseworkerVerified: true };
+          return { ...itm, caseworkerVerified: false };
+        }),
+      }))
+    );
   }
 
   if (loading) return <SkeletonPage />;
@@ -185,17 +216,61 @@ export default function FamilyDetail() {
       {/* Timeline Tab */}
       {tab === "timeline" && (
         <div>
+          <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 16 }}>
+            Family self-reported progress shown below. Use the buttons to verify completed milestones or mark ones done on their behalf.
+          </p>
           {timeline.map((phase) => (
             <div className="phase-section" key={phase.phaseKey}>
               <div className="phase-label">{phase.phase}</div>
               {phase.items.map((item) => (
-                <div className="milestone" key={item.id} style={{ cursor: "default" }}>
+                <div className="milestone" key={item.id} style={{ cursor: "default", alignItems: "flex-start" }}>
                   <div className={`m-dot ${item.status}`}>
                     {item.status === "done" ? "✓" : item.status === "active" ? "→" : "·"}
                   </div>
-                  <div className="m-info"><h4>{item.title}</h4><p>{item.desc}</p></div>
-                  <div className={`m-badge ${item.status}`}>
-                    {item.status === "done" ? "Done" : item.status === "active" ? "In Progress" : "Upcoming"}
+                  <div className="m-info" style={{ flex: 1 }}>
+                    <h4>{item.title}</h4>
+                    <p>{item.desc}</p>
+                    {item.note && (
+                      <div className="m-note">
+                        {item.completedDate && (
+                          <span style={{ fontWeight: 600 }}>
+                            {new Date(item.completedDate + "T00:00:00").toLocaleDateString("en-CA", {
+                              month: "short", day: "numeric", year: "numeric",
+                            })}{" · "}
+                          </span>
+                        )}
+                        {item.note}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                    <div className={`m-badge ${item.status}`}>
+                      {item.status === "done" ? "Done" : item.status === "active" ? "In Progress" : "Upcoming"}
+                    </div>
+                    {item.auto && <span className="m-auto-badge">Auto</span>}
+                    {item.status === "done" && !item.caseworkerVerified && (
+                      <button
+                        className="btn btn-sm btn-primary"
+                        style={{ fontSize: 11, padding: "3px 10px" }}
+                        onClick={() => verifyMilestone(item.id, "verify")}
+                      >
+                        Verify ✓
+                      </button>
+                    )}
+                    {item.status === "done" && item.caseworkerVerified && (
+                      <span className="m-verified-badge" style={{ cursor: "pointer" }} onClick={() => verifyMilestone(item.id, "unverify")} title="Click to remove verification">
+                        Caseworker ✓
+                      </span>
+                    )}
+                    {item.status !== "done" && (
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        style={{ fontSize: 11, padding: "3px 10px" }}
+                        onClick={() => verifyMilestone(item.id, "mark_done")}
+                      >
+                        Mark Done
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
