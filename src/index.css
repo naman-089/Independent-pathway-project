@@ -231,6 +231,13 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
 .btn-full { width: 100%; justify-content: center; }
 .btn:disabled { opacity: 0.5; pointer-events: none; }
 
+/* Inline text-style button — e.g. "Forgot password?", "Sign up", "Update intake →" */
+.btn-link {
+  background: none; border: none; padding: 0;
+  color: var(--teal); font-weight: 600; font-size: 14px;
+  font-family: 'DM Sans', sans-serif; cursor: pointer;
+}
+
 /* ── CARDS ── */
 .card {
   background: var(--white);
@@ -297,6 +304,7 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
 .step-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
 .step-title { font-size: 24px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
 .step-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.7; }
+.step-actions { display: flex; gap: 12px; margin-top: 28px; }
 
 .chip-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .chip {
@@ -357,6 +365,7 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
 .m-dot.pending { background: rgba(0,0,0,0.06); color: var(--text-muted); }
 .m-info h4 { font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 3px; }
 .m-info p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.m-status-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
 .m-badge {
   margin-left: auto; flex-shrink: 0;
   font-size: 10px; font-weight: 600;

@@ -50,7 +50,8 @@ export default function TimelinePage() {
 
   function handleMilestoneClick(pi, ii) {
     const item = timeline[pi].items[ii];
-    if (item.locked) return; // auto-verified from intake data
+    if (item.locked) return;     // auto-verified from intake data
+    if (item.status === "done") return; // completed milestones are final — can't be undone
 
     if (item.status === "active") {
       // Require reflection before marking Done
@@ -60,14 +61,11 @@ export default function TimelinePage() {
       return;
     }
 
-    // pending → active  or  done → pending  (direct)
-    const nextStatus = item.status === "done" ? "pending" : "active";
+    // pending → active
     const updated = timeline.map((phase, p) => ({
       ...phase,
       items: phase.items.map((itm, i) =>
-        p === pi && i === ii
-          ? { ...itm, status: nextStatus, completedDate: undefined, note: undefined }
-          : itm
+        p === pi && i === ii ? { ...itm, status: "active" } : itm
       ),
     }));
     setTimeline(updated);
@@ -138,6 +136,7 @@ export default function TimelinePage() {
 
       <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20 }}>
         Click a milestone to start it, then click again when ready to record your completion.
+        Once marked complete, a milestone is final and can't be reopened — your caseworker will verify it from there.
         Milestones marked <strong>Auto</strong> are verified directly from your intake answers.
       </p>
 
@@ -149,7 +148,7 @@ export default function TimelinePage() {
               key={item.id}
               className={`milestone${item.locked ? " milestone-locked" : ""}`}
               onClick={() => handleMilestoneClick(pi, ii)}
-              style={{ cursor: item.locked ? "default" : "pointer" }}
+              style={{ cursor: (item.locked || item.status === "done") ? "default" : "pointer" }}
             >
               <div className={`m-dot ${item.status}`}>
                 {item.status === "done" ? "✓" : item.status === "active" ? "→" : ii + 1}
@@ -170,7 +169,7 @@ export default function TimelinePage() {
                   </div>
                 )}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+              <div className="m-status-col">
                 <div className={`m-badge ${item.status}`}>
                   {item.status === "done" ? "Done" : item.status === "active" ? "In Progress" : "Upcoming"}
                 </div>

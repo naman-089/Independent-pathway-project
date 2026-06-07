@@ -4,6 +4,7 @@ import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { computeReadinessScore } from "../../utils/matching";
+import SkeletonPage from "../../components/Skeleton";
 
 const SKILL_LABELS = {
   independent: "Independent",
@@ -35,7 +36,7 @@ export default function PortfolioPage() {
     load();
   }, [user.uid, navigate]);
 
-  if (loading) return <div className="loading-center"><div className="spinner" /></div>;
+  if (loading) return <SkeletonPage />;
 
   const readiness = computeReadinessScore(intake);
   const name      = intake?.individualName || profile?.displayName || "—";
@@ -188,7 +189,7 @@ export default function PortfolioPage() {
           This portfolio is shared with your assigned caseworker at Reena. To update it, redo your intake assessment.{" "}
           <button
             onClick={() => navigate("/family/intake")}
-            style={{ background: "none", border: "none", color: "var(--teal)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+            className="btn-link" style={{ fontSize: 12 }}
           >
             Update intake →
           </button>

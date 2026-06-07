@@ -4,6 +4,7 @@ import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
 import { matchOrganizations } from "../../utils/matching";
 import { useNavigate } from "react-router-dom";
+import SkeletonPage from "../../components/Skeleton";
 
 const FILTER_TAGS = ["All", "Available Now", "Supported Housing", "Life Skills", "Employment", "Day Program"];
 
@@ -40,7 +41,7 @@ export default function ResourcesPage() {
     return matchFilter && matchSearch;
   });
 
-  if (loading) return <div className="loading-center"><div className="spinner" /></div>;
+  if (loading) return <SkeletonPage />;
 
   if (!intake) {
     return (

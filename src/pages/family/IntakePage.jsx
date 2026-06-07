@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
+import SkeletonPage from "../../components/Skeleton";
 
 const SKILL_OPTIONS = [
   { value: "full_support", label: "I need full support" },
@@ -185,7 +186,7 @@ export default function IntakePage() {
     }
   }
 
-  if (loadingDraft) return <div className="loading-center"><div className="spinner" /></div>;
+  if (loadingDraft) return <SkeletonPage />;
 
   const isEditing = existingStatus === "submitted";
 
@@ -231,7 +232,7 @@ export default function IntakePage() {
                 <option>Other</option>
               </select>
             </div>
-            <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+            <div className="step-actions">
               <button className="btn btn-primary" onClick={nextStep}>Continue →</button>
             </div>
           </div>
@@ -256,7 +257,7 @@ export default function IntakePage() {
                 ))}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+            <div className="step-actions">
               <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
               <button className="btn btn-primary" onClick={nextStep}>Continue →</button>
             </div>
@@ -275,7 +276,7 @@ export default function IntakePage() {
             <SkillSelect label="Managing health & medications"  field="medication"     value={form.skills.medication}     onChange={setSkill} />
             <SkillSelect label="Personal hygiene & self-care"   field="hygiene"        value={form.skills.hygiene}        onChange={setSkill} />
             <SkillSelect label="Communication & social skills"  field="communication"  value={form.skills.communication}  onChange={setSkill} />
-            <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+            <div className="step-actions">
               <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
               <button className="btn btn-primary" onClick={nextStep}>Continue →</button>
             </div>
@@ -322,7 +323,7 @@ export default function IntakePage() {
               <label>Any additional legal or financial notes (optional)</label>
               <textarea placeholder="Anything else we should know..." value={form.legalNotes} onChange={(e) => setField("legalNotes", e.target.value)} />
             </div>
-            <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+            <div className="step-actions">
               <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
               <button className="btn btn-primary" onClick={nextStep}>Continue →</button>
             </div>
@@ -366,7 +367,7 @@ export default function IntakePage() {
 
             {error && <div className="alert alert-danger">{error}</div>}
 
-            <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+            <div className="step-actions">
               <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
                 {saving ? "Saving…" : isEditing ? "Update My Timeline →" : "Generate My Timeline →"}

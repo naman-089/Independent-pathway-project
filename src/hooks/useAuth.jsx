@@ -19,15 +19,22 @@ export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Set when Firebase never responds in time — lets the UI explain *why*
+  // the user landed back on the sign-in screen instead of looking signed out
+  const [connectionIssue, setConnectionIssue] = useState(false);
   // Prevents auto-signout during the brief window when a new account is being created
   // and the Firestore user doc doesn't exist yet
   const signingUpRef = useRef(false);
 
   useEffect(() => {
-    const timeout = setTimeout(() => setLoading(false), 5000);
+    const timeout = setTimeout(() => {
+      setConnectionIssue(true);
+      setLoading(false);
+    }, 5000);
 
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       clearTimeout(timeout);
+      setConnectionIssue(false);
       if (firebaseUser) {
         setUser(firebaseUser);
         const snap = await getDoc(doc(db, "users", firebaseUser.uid));
@@ -95,7 +102,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signup, login, logout, resetPassword, updateDisplayName }}>
+    <AuthContext.Provider value={{ user, profile, loading, connectionIssue, signup, login, logout, resetPassword, updateDisplayName }}>
       {children}
     </AuthContext.Provider>
   );

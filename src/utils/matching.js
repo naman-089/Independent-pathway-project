@@ -117,12 +117,9 @@ export function generateTimeline(intake) {
     ...phase,
     items: phase.items
       .filter((m) => m.alwaysInclude || m.include)
-      .map((m, i) => ({ ...m, status: i === 0 && phase.phaseKey === 1 ? "done" : "pending" })),
+      .map((m) => ({ ...m, status: "pending" })),
   }));
 }
-
-// IDs of milestones that can be auto-completed from intake data
-export const AUTO_MILESTONE_IDS = new Set(["m1", "m8", "m9"]);
 
 // Returns a map of { [milestoneId]: { status, auto, note } } for milestones
 // that are verifiable directly from the intake form data.

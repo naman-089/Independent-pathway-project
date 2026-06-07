@@ -1,6 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+
+// Maps each nav route to the dynamic import behind its lazy() in App.jsx, so we
+// can warm up the JS chunk in the background — by the time the user clicks a
+// link, the page is already downloaded instead of loading on demand.
+const CHUNK_LOADERS = {
+  "/family":           () => import("../pages/family/FamilyHome"),
+  "/family/intake":    () => import("../pages/family/IntakePage"),
+  "/family/timeline":  () => import("../pages/family/TimelinePage"),
+  "/family/portfolio": () => import("../pages/family/PortfolioPage"),
+  "/family/resources": () => import("../pages/family/ResourcesPage"),
+  "/family/profile":   () => import("../pages/ProfilePage"),
+
+  "/caseworker":          () => import("../pages/caseworker/CaseworkerDashboard"),
+  "/caseworker/families": () => import("../pages/caseworker/FamiliesList"),
+  "/caseworker/matches":  () => import("../pages/caseworker/MatchesOverview"),
+  "/caseworker/profile":  () => import("../pages/ProfilePage"),
+
+  "/admin":           () => import("../pages/admin/AdminDashboard"),
+  "/admin/resources": () => import("../pages/admin/ResourceDirectory"),
+  "/admin/users":     () => import("../pages/admin/UsersPage"),
+  "/admin/profile":   () => import("../pages/ProfilePage"),
+};
+
+const prefetched = new Set();
+function prefetchChunk(to) {
+  if (prefetched.has(to)) return;
+  const load = CHUNK_LOADERS[to];
+  if (!load) return;
+  prefetched.add(to);
+  load();
+}
 
 const FAMILY_LINKS = [
   { to: "/family",           label: "Home"      },
@@ -39,6 +70,15 @@ export default function Nav() {
     profile?.role === "caseworker" ? "Caseworker" :
     profile?.role === "admin"      ? "Admin" : "Family";
 
+  // Warm up the other pages' chunks once the dashboard is idle, so navigating
+  // between sections feels instant instead of waiting on a fresh download.
+  useEffect(() => {
+    const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
+    const cancel = window.cancelIdleCallback || clearTimeout;
+    const id = idle(() => links.forEach((l) => prefetchChunk(l.to)));
+    return () => cancel(id);
+  }, [profile?.role]);
+
   function close() { setMenuOpen(false); }
 
   return (
@@ -61,6 +101,9 @@ export default function Nav() {
               key={l.to}
               to={l.to}
               className={`nav-link${location.pathname === l.to ? " active" : ""}`}
+              onMouseEnter={() => prefetchChunk(l.to)}
+              onTouchStart={() => prefetchChunk(l.to)}
+              onFocus={() => prefetchChunk(l.to)}
             >
               {l.label}
             </Link>
@@ -78,6 +121,7 @@ export default function Nav() {
               to={l.to}
               className={`nav-link${location.pathname === l.to ? " active" : ""}`}
               onClick={close}
+              onTouchStart={() => prefetchChunk(l.to)}
               role="menuitem"
             >
               {l.label}

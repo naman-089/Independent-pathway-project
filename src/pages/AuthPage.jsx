@@ -46,7 +46,7 @@ export default function AuthPage() {
   const [error, setError]             = useState("");
   const [loading, setLoading]         = useState(false);
 
-  const { login, signup, resetPassword } = useAuth();
+  const { login, signup, resetPassword, connectionIssue } = useAuth();
   const navigate = useNavigate();
 
   function redirect(r) {
@@ -101,6 +101,12 @@ export default function AuthPage() {
         <h2 className="auth-title">{TITLES[mode]}</h2>
         <p className="auth-sub">{SUBS[mode]}</p>
 
+        {connectionIssue && (
+          <div className="alert alert-warn">
+            We couldn't reach the server in time, so we couldn't check whether you're already signed in.
+            Check your connection and sign in again — your account is fine.
+          </div>
+        )}
         {error && <div className="alert alert-danger">{error}</div>}
 
         {/* ── RESET MODE ── */}
@@ -124,8 +130,7 @@ export default function AuthPage() {
             )}
             <div className="divider" style={{ margin: "24px 0" }} />
             <p style={{ textAlign: "center", fontSize: 14, color: "var(--text-muted)" }}>
-              <button onClick={() => switchMode("login")}
-                style={{ background: "none", border: "none", color: "var(--teal)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+              <button onClick={() => switchMode("login")} className="btn-link">
                 ← Back to sign in
               </button>
             </p>
@@ -222,7 +227,7 @@ export default function AuthPage() {
                     Remember me
                   </label>
                   <button type="button" onClick={() => switchMode("reset")}
-                    style={{ background: "none", border: "none", color: "var(--teal)", fontWeight: 500, fontSize: 13, cursor: "pointer" }}>
+                    className="btn-link" style={{ fontWeight: 500, fontSize: 13 }}>
                     Forgot password?
                   </button>
                 </div>
@@ -242,7 +247,7 @@ export default function AuthPage() {
               {mode === "login" ? "Don't have an account? " : "Already have an account? "}
               <button
                 onClick={() => switchMode(mode === "login" ? "signup" : "login")}
-                style={{ background: "none", border: "none", color: "var(--teal)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
+                className="btn-link"
               >
                 {mode === "login" ? "Sign up" : "Sign in"}
               </button>

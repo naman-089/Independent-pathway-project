@@ -60,20 +60,11 @@ export default function FamilyDetail() {
     setTimeout(() => setSaved(false), 3000);
   }
 
-  async function verifyMilestone(itemId, action) {
+  async function setMilestoneVerified(itemId, verified) {
     const currentStatuses = intake.milestoneStatuses || {};
     const raw = currentStatuses[itemId];
     const cur = raw ? (typeof raw === "string" ? { status: raw } : raw) : { status: "pending" };
-
-    let next;
-    if (action === "mark_done") {
-      next = { ...cur, status: "done", caseworkerVerified: true };
-    } else if (action === "verify") {
-      next = { ...cur, caseworkerVerified: true };
-    } else {
-      // unverify
-      next = { ...cur, caseworkerVerified: false };
-    }
+    const next = { ...cur, caseworkerVerified: verified };
 
     const newStatuses = { ...currentStatuses, [itemId]: next };
     await updateDoc(doc(db, "intakes", uid), { milestoneStatuses: newStatuses });
@@ -81,12 +72,9 @@ export default function FamilyDetail() {
     setTimeline((prev) =>
       prev.map((phase) => ({
         ...phase,
-        items: phase.items.map((itm) => {
-          if (itm.id !== itemId) return itm;
-          if (action === "mark_done") return { ...itm, status: "done", caseworkerVerified: true };
-          if (action === "verify")   return { ...itm, caseworkerVerified: true };
-          return { ...itm, caseworkerVerified: false };
-        }),
+        items: phase.items.map((itm) =>
+          itm.id === itemId ? { ...itm, caseworkerVerified: verified } : itm
+        ),
       }))
     );
   }
@@ -217,7 +205,7 @@ export default function FamilyDetail() {
       {tab === "timeline" && (
         <div>
           <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 16 }}>
-            Family self-reported progress shown below. Use the buttons to verify completed milestones or mark ones done on their behalf.
+            Family self-reported progress shown below. Verify a milestone once you've confirmed the family's completion note as evidence.
           </p>
           {timeline.map((phase) => (
             <div className="phase-section" key={phase.phaseKey}>
@@ -243,7 +231,7 @@ export default function FamilyDetail() {
                       </div>
                     )}
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                  <div className="m-status-col">
                     <div className={`m-badge ${item.status}`}>
                       {item.status === "done" ? "Done" : item.status === "active" ? "In Progress" : "Upcoming"}
                     </div>
@@ -252,24 +240,15 @@ export default function FamilyDetail() {
                       <button
                         className="btn btn-sm btn-primary"
                         style={{ fontSize: 11, padding: "3px 10px" }}
-                        onClick={() => verifyMilestone(item.id, "verify")}
+                        onClick={() => setMilestoneVerified(item.id, true)}
                       >
                         Verify ✓
                       </button>
                     )}
                     {item.status === "done" && item.caseworkerVerified && (
-                      <span className="m-verified-badge" style={{ cursor: "pointer" }} onClick={() => verifyMilestone(item.id, "unverify")} title="Click to remove verification">
+                      <span className="m-verified-badge" style={{ cursor: "pointer" }} onClick={() => setMilestoneVerified(item.id, false)} title="Click to remove verification">
                         Caseworker ✓
                       </span>
-                    )}
-                    {item.status !== "done" && (
-                      <button
-                        className="btn btn-sm btn-secondary"
-                        style={{ fontSize: 11, padding: "3px 10px" }}
-                        onClick={() => verifyMilestone(item.id, "mark_done")}
-                      >
-                        Mark Done
-                      </button>
                     )}
                   </div>
                 </div>
