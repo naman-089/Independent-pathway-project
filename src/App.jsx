@@ -26,21 +26,30 @@ const ResourceDirectory   = lazy(() => import("./pages/admin/ResourceDirectory")
 const UsersPage           = lazy(() => import("./pages/admin/UsersPage"));
 
 function AppShell() {
-  const [splashDone, setSplashDone] = useState(false);
+  const [splashDone, setSplashDone] = useState(() => sessionStorage.getItem("splashDone") === "1");
 
   useEffect(() => {
-    if (sessionStorage.getItem("splashDone")) setSplashDone(true);
-  }, []);
+    if (splashDone) return;
+    // Match the splash background behind it and warm up the auth chunk while it
+    // plays, so the handoff is instant — the auth form (and its password field)
+    // only mounts once the splash is gone, instead of sitting hidden underneath
+    // it where mobile browsers can prematurely trigger the keyboard/autofill.
+    document.body.classList.add("splash-active");
+    import("./pages/AuthPage");
+    return () => document.body.classList.remove("splash-active");
+  }, [splashDone]);
 
   function handleSplashExit() {
     sessionStorage.setItem("splashDone", "1");
     setSplashDone(true);
   }
 
+  if (!splashDone) {
+    return <Splash onEnter={handleSplashExit} />;
+  }
+
   return (
     <>
-      {!splashDone && <Splash onEnter={handleSplashExit} />}
-
       <Suspense fallback={<SkeletonPage />}>
         <Routes>
           {/* Public */}

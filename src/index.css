@@ -36,6 +36,10 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Match the splash's navy while it's the only thing mounted, so the handoff
+   to the auth page (also navy) is seamless with no flash of the lighter bg. */
+body.splash-active { background: var(--navy); }
+
 h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
 
 a { color: inherit; text-decoration: none; }
