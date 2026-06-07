@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
 import { getAuthErrorMessage } from "../utils/errorMessages";
 
@@ -61,9 +63,7 @@ export default function AuthPage() {
     try {
       if (mode === "login") {
         const cred = await login(email, password, remember);
-        const { getDoc: gd, doc: d2 } = await import("firebase/firestore");
-        const { db: db2 } = await import("../firebase.js");
-        const snap = await gd(d2(db2, "users", cred.user.uid));
+        const snap = await getDoc(doc(db, "users", cred.user.uid));
         redirect(snap.data()?.role || "family");
       } else {
         if (!validateStaffCode(role, staffCode)) {

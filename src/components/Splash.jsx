@@ -14,8 +14,8 @@ export default function Splash({ onEnter }) {
       <div className="splash-deco splash-deco-2" />
       <p className="splash-eyebrow">Reena × York University · C4 Design Lab</p>
       <h1 className="splash-title">
-        <span className="splash-word">Independence&nbsp;</span>
-        <span className="splash-word">Pathway&nbsp;</span>
+        <span className="splash-word">Independence</span>{" "}
+        <span className="splash-word">Pathway</span>{" "}
         <span className="splash-word">Platform</span>
       </h1>
       <p className="splash-sub">
