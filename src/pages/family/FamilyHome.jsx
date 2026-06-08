@@ -1,15 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useLanguage } from "../../hooks/useLanguage";
 import { IconClipboardList, IconMap2, IconUserCircle, IconBuildingCommunity } from "@tabler/icons-react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 
 export default function FamilyHome() {
   const { profile, user } = useAuth();
+  const { t }             = useLanguage();
   const navigate          = useNavigate();
   const name              = profile?.displayName?.split(" ")[0] || "there";
   const [match, setMatch] = useState(null);
+
+  const [welcomePrefix, welcomeSuffix] = t("familyHome.welcomeBack", { name: "{{name}}" }).split("{{name}}");
+  const [matchPrefix, matchSuffix] = match
+    ? t("familyHome.matchConfirmed", { org: "{{org}}", score: match.score }).split("{{org}}")
+    : [];
 
   useEffect(() => {
     if (!user) return;
@@ -23,10 +30,10 @@ export default function FamilyHome() {
       {match && (
         <div className="alert alert-success" style={{ marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <span>
-            Your caseworker confirmed a match: <strong>{match.orgName}</strong> ({match.score}% compatibility)
+            {matchPrefix}<strong>{match.orgName}</strong>{matchSuffix}
           </span>
           <button className="btn btn-sm btn-secondary" onClick={() => navigate("/family/resources")}>
-            View Resources →
+            {t("familyHome.viewResources")}
           </button>
         </div>
       )}
@@ -34,56 +41,54 @@ export default function FamilyHome() {
       <div className="hero">
         <div className="hero-deco hero-deco-1" />
         <div className="hero-deco hero-deco-2" />
-        <div className="hero-badge">Independence Pathway Platform</div>
+        <div className="hero-badge">{t("familyHome.heroBadge")}</div>
         <h1>
-          Welcome back, <em>{name}</em>.<br />
-          The pathway before the pathway.
+          {welcomePrefix}<em>{name}</em>{welcomeSuffix}<br />
+          {t("familyHome.heroTagline")}
         </h1>
         <p>
-          A proactive planning platform for individuals with developmental
-          disabilities and their families — so that when transition happens,
-          there's already a plan in place.
+          {t("familyHome.heroBody")}
         </p>
         <button className="btn btn-primary" onClick={() => navigate("/family/intake")}>
-          {profile?.intakeComplete ? "View My Pathway →" : "Start Your Intake →"}
+          {profile?.intakeComplete ? t("familyHome.ctaContinue") : t("familyHome.ctaStart")}
         </button>
       </div>
 
       <div className="feature-grid">
         <div className="card card-hover feature-card" onClick={() => navigate("/family/intake")}>
           <div className="feature-icon"><IconClipboardList size={22} /></div>
-          <h3>Intake Assessment</h3>
-          <p>A holistic questionnaire covering vision, life skills, finances, and strengths — co-created with you.</p>
+          <h3>{t("familyHome.featureIntakeTitle")}</h3>
+          <p>{t("familyHome.featureIntakeBody")}</p>
         </div>
         <div className="card card-hover feature-card" onClick={() => navigate("/family/timeline")}>
           <div className="feature-icon"><IconMap2 size={22} /></div>
-          <h3>Independence Timeline</h3>
-          <p>A personalized roadmap with milestones that track readiness and progress toward independent living.</p>
+          <h3>{t("familyHome.featureTimelineTitle")}</h3>
+          <p>{t("familyHome.featureTimelineBody")}</p>
         </div>
         <div className="card card-hover feature-card" onClick={() => navigate("/family/portfolio")}>
           <div className="feature-icon"><IconUserCircle size={22} /></div>
-          <h3>Digital Portfolio</h3>
-          <p>A living record of achievements, skills, and routines — a verified blueprint caseworkers can rely on.</p>
+          <h3>{t("familyHome.featurePortfolioTitle")}</h3>
+          <p>{t("familyHome.featurePortfolioBody")}</p>
         </div>
         <div className="card card-hover feature-card" onClick={() => navigate("/family/resources")}>
           <div className="feature-icon"><IconBuildingCommunity size={22} /></div>
-          <h3>Resource Matches</h3>
-          <p>Smart matching to Reena and partner organizations based on your actual needs and readiness.</p>
+          <h3>{t("familyHome.featureResourcesTitle")}</h3>
+          <p>{t("familyHome.featureResourcesBody")}</p>
         </div>
       </div>
 
       <div className="stat-grid">
         <div className="stat-card">
           <div className="stat-num">52<em>K+</em></div>
-          <div className="stat-label">Ontarians on the developmental services waitlist</div>
+          <div className="stat-label">{t("familyHome.statWaitlist")}</div>
         </div>
         <div className="stat-card">
           <div className="stat-num"><em>$</em>2.9<em>B</em></div>
-          <div className="stat-label">Spent annually — yet the waitlist grew 55% since 2018</div>
+          <div className="stat-label">{t("familyHome.statSpend")}</div>
         </div>
         <div className="stat-card">
           <div className="stat-num">0</div>
-          <div className="stat-label">Existing platforms that hold the whole transition journey together</div>
+          <div className="stat-label">{t("familyHome.statPlatforms")}</div>
         </div>
       </div>
     </div>

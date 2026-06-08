@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useLanguage } from "../hooks/useLanguage";
 
 export default function Splash({ onEnter }) {
   const [show, setShow] = useState(true);
+  const { t } = useLanguage();
 
   function handleEnter() {
     setShow(false);
@@ -12,20 +14,20 @@ export default function Splash({ onEnter }) {
     <div className={`splash${show ? "" : " exit"}`}>
       <div className="splash-deco splash-deco-1" />
       <div className="splash-deco splash-deco-2" />
-      <p className="splash-eyebrow">Reena × York University · C4 Design Lab</p>
+      <p className="splash-eyebrow">{t("splash.eyebrow")}</p>
       <h1 className="splash-title">
         <span className="splash-word">Independence</span>{" "}
         <span className="splash-word">Pathway</span>{" "}
         <span className="splash-word">Platform</span>
       </h1>
       <p className="splash-sub">
-        A proactive roadmap for every family navigating transition
+        {t("splash.sub")}
       </p>
       <div className="splash-bar">
         <div className="splash-bar-fill" />
       </div>
       <button className="splash-btn" onClick={handleEnter}>
-        Enter Platform →
+        {t("splash.enter")}
       </button>
     </div>
   );

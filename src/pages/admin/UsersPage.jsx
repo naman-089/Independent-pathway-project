@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
+import { useLanguage } from "../../hooks/useLanguage";
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
+  const { t } = useLanguage();
   const [users, setUsers]     = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null); // uid currently being deleted
@@ -22,9 +24,7 @@ export default function UsersPage() {
 
   async function handleDelete(u) {
     if (u.uid === currentUser?.uid) return;
-    const confirmed = window.confirm(
-      `Delete "${u.displayName || u.email}"?\n\nThis removes their profile, intake, and match data. They will be signed out automatically.`
-    );
+    const confirmed = window.confirm(t("usersPage.deleteConfirm", { name: u.displayName || u.email }));
     if (!confirmed) return;
 
     setError("");
@@ -38,7 +38,7 @@ export default function UsersPage() {
       ]);
       setUsers((prev) => prev.filter((x) => x.uid !== u.uid));
     } catch (err) {
-      setError("Failed to delete user: " + err.message);
+      setError(t("usersPage.deleteError", { message: err.message }));
     } finally {
       setDeleting(null);
     }
@@ -51,9 +51,9 @@ export default function UsersPage() {
   return (
     <div className="page-wide">
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--navy)" }}>Registered Users</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--navy)" }}>{t("usersPage.title")}</h1>
         <p style={{ fontSize: 14, color: "var(--text-muted)", marginTop: 4 }}>
-          {users.length} total users
+          {t("usersPage.subtitle", { count: users.length })}
         </p>
       </div>
 
@@ -63,10 +63,10 @@ export default function UsersPage() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Registered</th>
+              <th>{t("usersPage.colName")}</th>
+              <th>{t("usersPage.colEmail")}</th>
+              <th>{t("usersPage.colRole")}</th>
+              <th>{t("usersPage.colRegistered")}</th>
               <th></th>
             </tr>
           </thead>
@@ -80,7 +80,7 @@ export default function UsersPage() {
                     {u.displayName}
                     {isSelf && (
                       <span style={{ fontSize: 10, marginLeft: 6, color: "var(--accent)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>
-                        you
+                        {t("usersPage.you")}
                       </span>
                     )}
                   </td>
@@ -92,17 +92,17 @@ export default function UsersPage() {
                     </span>
                   </td>
                   <td style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-CA") : "—"}
+                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-CA") : t("common.dash")}
                   </td>
                   <td>
                     <button
                       className="btn btn-sm btn-danger"
                       onClick={() => handleDelete(u)}
                       disabled={isSelf || isDeleting}
-                      title={isSelf ? "You cannot delete your own account" : "Delete user"}
+                      title={isSelf ? t("usersPage.cannotDeleteSelf") : t("usersPage.deleteUser")}
                       style={{ opacity: isSelf ? 0.35 : 1 }}
                     >
-                      {isDeleting ? "Deleting…" : "Delete"}
+                      {isDeleting ? t("usersPage.deleting") : t("usersPage.delete")}
                     </button>
                   </td>
                 </tr>
@@ -111,7 +111,7 @@ export default function UsersPage() {
             {users.length === 0 && (
               <tr>
                 <td colSpan={5} style={{ textAlign: "center", color: "var(--text-muted)", padding: 32 }}>
-                  No users found
+                  {t("usersPage.noneFound")}
                 </td>
               </tr>
             )}
@@ -120,8 +120,7 @@ export default function UsersPage() {
       </div>
 
       <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 12 }}>
-        Deleting a user removes their profile, intake, and match data from the platform.
-        Their sign-in account is revoked automatically on their next page load.
+        {t("usersPage.footerNote")}
       </p>
     </div>
   );

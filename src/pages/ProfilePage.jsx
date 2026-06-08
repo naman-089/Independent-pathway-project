@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useLanguage } from "../hooks/useLanguage";
 
 export default function ProfilePage() {
   const { user, profile, updateDisplayName } = useAuth();
+  const { t } = useLanguage();
   const [name, setName]       = useState(profile?.displayName || "");
   const [saving, setSaving]   = useState(false);
   const [success, setSuccess] = useState(false);
@@ -24,36 +26,36 @@ export default function ProfilePage() {
   return (
     <div className="page">
       <div style={{ maxWidth: 480 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--navy)", marginBottom: 4 }}>My Profile</h1>
-        <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 28 }}>Update your account details.</p>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--navy)", marginBottom: 4 }}>{t("profile.title")}</h1>
+        <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 28 }}>{t("profile.subtitle")}</p>
 
-        {success && <div className="alert alert-success">Profile updated successfully.</div>}
+        {success && <div className="alert alert-success">{t("profile.updateSuccess")}</div>}
         {error   && <div className="alert alert-danger">{error}</div>}
 
         <form onSubmit={handleSave}>
           <div className="field">
-            <label>Display name</label>
+            <label>{t("profile.displayNameLabel")}</label>
             <input
               type="text" required
-              placeholder="Your full name"
+              placeholder={t("profile.displayNamePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
           <div className="field">
-            <label>Email address</label>
+            <label>{t("profile.emailLabel")}</label>
             <input type="email" value={user?.email || ""} disabled style={{ opacity: 0.6 }} />
-            <p className="field-hint">Email cannot be changed here.</p>
+            <p className="field-hint">{t("profile.emailHint")}</p>
           </div>
           <div className="field">
-            <label>Role</label>
+            <label>{t("profile.roleLabel")}</label>
             <input
               type="text" value={profile?.role || ""} disabled
               style={{ opacity: 0.6, textTransform: "capitalize" }}
             />
           </div>
           <button type="submit" className="btn btn-primary" disabled={saving || !name.trim()}>
-            {saving ? "Saving…" : "Save changes"}
+            {saving ? t("profile.saving") : t("profile.save")}
           </button>
         </form>
       </div>

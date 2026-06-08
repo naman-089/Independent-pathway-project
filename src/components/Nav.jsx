@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useLanguage } from "../hooks/useLanguage";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 // Maps each nav route to the dynamic import behind its lazy() in App.jsx, so we
 // can warm up the JS chunk in the background — by the time the user clicks a
@@ -34,31 +36,32 @@ function prefetchChunk(to) {
 }
 
 const FAMILY_LINKS = [
-  { to: "/family",           label: "Home"      },
-  { to: "/family/intake",    label: "Intake"    },
-  { to: "/family/timeline",  label: "Timeline"  },
-  { to: "/family/portfolio", label: "Portfolio" },
-  { to: "/family/resources", label: "Resources" },
-  { to: "/family/profile",   label: "Profile"   },
+  { to: "/family",           labelKey: "nav.home"      },
+  { to: "/family/intake",    labelKey: "nav.intake"    },
+  { to: "/family/timeline",  labelKey: "nav.timeline"  },
+  { to: "/family/portfolio", labelKey: "nav.portfolio" },
+  { to: "/family/resources", labelKey: "nav.resources" },
+  { to: "/family/profile",   labelKey: "nav.profile"   },
 ];
 
 const CASEWORKER_LINKS = [
-  { to: "/caseworker",            label: "Dashboard" },
-  { to: "/caseworker/families",   label: "Families"  },
-  { to: "/caseworker/matches",    label: "Matches"   },
-  { to: "/caseworker/profile",    label: "Profile"   },
+  { to: "/caseworker",            labelKey: "nav.dashboard" },
+  { to: "/caseworker/families",   labelKey: "nav.families"  },
+  { to: "/caseworker/matches",    labelKey: "nav.matches"   },
+  { to: "/caseworker/profile",    labelKey: "nav.profile"   },
 ];
 
 const ADMIN_LINKS = [
-  { to: "/admin",            label: "Dashboard" },
-  { to: "/admin/resources",  label: "Directory" },
-  { to: "/admin/users",      label: "Users"     },
-  { to: "/admin/profile",    label: "Profile"   },
+  { to: "/admin",            labelKey: "nav.dashboard" },
+  { to: "/admin/resources",  labelKey: "nav.directory" },
+  { to: "/admin/users",      labelKey: "nav.users"     },
+  { to: "/admin/profile",    labelKey: "nav.profile"   },
 ];
 
 export default function Nav() {
   const { profile, logout } = useAuth();
   const location = useLocation();
+  const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const links =
@@ -67,8 +70,8 @@ export default function Nav() {
     FAMILY_LINKS;
 
   const roleLabel =
-    profile?.role === "caseworker" ? "Caseworker" :
-    profile?.role === "admin"      ? "Admin" : "Family";
+    profile?.role === "caseworker" ? t("nav.roleCaseworker") :
+    profile?.role === "admin"      ? t("nav.roleAdmin") : t("nav.roleFamily");
 
   // Warm up the other pages' chunks once the dashboard is idle, so navigating
   // between sections feels instant instead of waiting on a fresh download.
@@ -105,10 +108,11 @@ export default function Nav() {
               onTouchStart={() => prefetchChunk(l.to)}
               onFocus={() => prefetchChunk(l.to)}
             >
-              {l.label}
+              {t(l.labelKey)}
             </Link>
           ))}
-          <button className="nav-link danger" onClick={logout}>Sign out</button>
+          <button className="nav-link danger" onClick={logout}>{t("nav.signOut")}</button>
+          <LanguageSwitcher />
         </div>
       </nav>
 
@@ -124,12 +128,13 @@ export default function Nav() {
               onTouchStart={() => prefetchChunk(l.to)}
               role="menuitem"
             >
-              {l.label}
+              {t(l.labelKey)}
             </Link>
           ))}
           <button className="nav-link danger" onClick={() => { logout(); close(); }} role="menuitem">
-            Sign out
+            {t("nav.signOut")}
           </button>
+          <LanguageSwitcher />
         </div>
       )}
     </>

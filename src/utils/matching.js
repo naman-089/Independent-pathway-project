@@ -71,7 +71,7 @@ export function matchOrganizations(intake, organizations) {
     .sort((a, b) => b.matchScore - a.matchScore);
 }
 
-export function generateTimeline(intake) {
+export function generateTimeline(intake, t) {
   if (!intake) return [];
   const readiness = computeReadinessScore(intake);
   const supportMap = { low: "low", medium: "medium", high: "high" };
@@ -79,36 +79,36 @@ export function generateTimeline(intake) {
 
   const allMilestones = [
     {
-      phase: "Phase 1 — Foundation",
+      phase: t("timeline.phase1"),
       phaseKey: 1,
       items: [
-        { id: "m1", title: "Complete intake assessment", desc: "Full profile created with goals, skills, and support needs", alwaysInclude: true },
-        { id: "m2", title: "Register with DSO", desc: "Developmental Services Ontario registration submitted", alwaysInclude: true },
-        { id: "m3", title: "Connect with Peer Navigator", desc: "Matched with a navigator who has lived the transition journey", alwaysInclude: true },
+        { id: "m1", title: t("timeline.m1Title"), desc: t("timeline.m1Desc"), alwaysInclude: true },
+        { id: "m2", title: t("timeline.m2Title"), desc: t("timeline.m2Desc"), alwaysInclude: true },
+        { id: "m3", title: t("timeline.m3Title"), desc: t("timeline.m3Desc"), alwaysInclude: true },
       ],
     },
     {
-      phase: "Phase 2 — Skills Building",
+      phase: t("timeline.phase2"),
       phaseKey: 2,
       items: [
-        { id: "m4", title: "Budgeting & financial literacy", desc: "Complete Reena's 4-session financial literacy workshop", include: readiness < 80 },
-        { id: "m5", title: "Transit independence practice", desc: "Route planning and solo travel with fading support", include: !intake.skills?.transit || intake.skills.transit !== "independent" },
-        { id: "m6", title: "Cooking & meal prep skills", desc: "Weekly cooking sessions with a life skills coach", include: !intake.skills?.cooking || intake.skills.cooking !== "independent" },
-        { id: "m7", title: "Medication self-management", desc: "Develop a supported routine for medications and health care", include: intake.skills?.medication !== "independent" },
-        { id: "m8", title: "Establish Henson Trust", desc: "Work with legal aid to protect ODSP eligibility through a discretionary trust", alwaysInclude: true },
-        { id: "m9", title: "Supported Decision-Making agreement", desc: "Formalize decision-making supports and legal planning", include: !intake.legalReady },
-        { id: "m10", title: "Apply for ODSP", desc: "Support through the ODSP application process", include: !intake.odspRegistered },
+        { id: "m4", title: t("timeline.m4Title"), desc: t("timeline.m4Desc"), include: readiness < 80 },
+        { id: "m5", title: t("timeline.m5Title"), desc: t("timeline.m5Desc"), include: !intake.skills?.transit || intake.skills.transit !== "independent" },
+        { id: "m6", title: t("timeline.m6Title"), desc: t("timeline.m6Desc"), include: !intake.skills?.cooking || intake.skills.cooking !== "independent" },
+        { id: "m7", title: t("timeline.m7Title"), desc: t("timeline.m7Desc"), include: intake.skills?.medication !== "independent" },
+        { id: "m8", title: t("timeline.m8Title"), desc: t("timeline.m8Desc"), alwaysInclude: true },
+        { id: "m9", title: t("timeline.m9Title"), desc: t("timeline.m9Desc"), include: !intake.legalReady },
+        { id: "m10", title: t("timeline.m10Title"), desc: t("timeline.m10Desc"), include: !intake.odspRegistered },
       ],
     },
     {
-      phase: "Phase 3 — Transition Ready",
+      phase: t("timeline.phase3"),
       phaseKey: 3,
       items: [
-        { id: "m11", title: "Placement match & site visits", desc: "Tour matched residences with a support worker and family", alwaysInclude: true },
-        { id: "m12", title: "Trial stay (where available)", desc: "Short-term supported trial in matched residence", include: support === "high" },
-        { id: "m13", title: "Move-in preparation", desc: "Packing, routines setup, and orientation to new home", alwaysInclude: true },
-        { id: "m14", title: "Move-in & 30-day check-in", desc: "First 30 days with daily Reena staff check-ins", alwaysInclude: true },
-        { id: "m15", title: "90-day stabilization review", desc: "Comprehensive review with family, caseworker, and individual", alwaysInclude: true },
+        { id: "m11", title: t("timeline.m11Title"), desc: t("timeline.m11Desc"), alwaysInclude: true },
+        { id: "m12", title: t("timeline.m12Title"), desc: t("timeline.m12Desc"), include: support === "high" },
+        { id: "m13", title: t("timeline.m13Title"), desc: t("timeline.m13Desc"), alwaysInclude: true },
+        { id: "m14", title: t("timeline.m14Title"), desc: t("timeline.m14Desc"), alwaysInclude: true },
+        { id: "m15", title: t("timeline.m15Title"), desc: t("timeline.m15Desc"), alwaysInclude: true },
       ],
     },
   ];
@@ -123,24 +123,24 @@ export function generateTimeline(intake) {
 
 // Returns a map of { [milestoneId]: { status, auto, note } } for milestones
 // that are verifiable directly from the intake form data.
-export function getAutoStatuses(intake) {
+export function getAutoStatuses(intake, t) {
   if (!intake) return {};
   const r = {};
   if (intake.status === "submitted")
-    r["m1"] = { status: "done", auto: true, note: "Intake assessment submitted" };
+    r["m1"] = { status: "done", auto: true, note: t("timeline.autoNoteIntake") };
   if (intake.hensonTrust === "yes")
-    r["m8"] = { status: "done", auto: true, note: "Confirmed in intake: Henson Trust in place" };
+    r["m8"] = { status: "done", auto: true, note: t("timeline.autoNoteHenson") };
   if (intake.sdmInPlace === "yes")
-    r["m9"] = { status: "done", auto: true, note: "Confirmed in intake: SDM agreement in place" };
+    r["m9"] = { status: "done", auto: true, note: t("timeline.autoNoteSdm") };
   return r;
 }
 
 // Overlays saved + auto statuses onto a generated timeline array.
 // Auto milestones are marked locked=true so family users can't toggle them.
 // Caseworker-set fields (caseworkerVerified) are preserved over auto values.
-export function applyStatuses(generated, intake) {
+export function applyStatuses(generated, intake, t) {
   const saved = (intake && intake.milestoneStatuses) || {};
-  const auto = getAutoStatuses(intake);
+  const auto = getAutoStatuses(intake, t);
   return generated.map((phase) => ({
     ...phase,
     items: phase.items.map((item) => {

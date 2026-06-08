@@ -2,16 +2,10 @@ import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
+import { useLanguage } from "../../hooks/useLanguage";
 import { useNavigate } from "react-router-dom";
 import { computeReadinessScore } from "../../utils/matching";
 import SkeletonPage from "../../components/Skeleton";
-
-const SKILL_LABELS = {
-  independent: "Independent",
-  reminders:   "With reminders",
-  some_help:   "With some help",
-  full_support: "Full support",
-};
 
 const SKILL_PCT = {
   independent:  100,
@@ -22,6 +16,7 @@ const SKILL_PCT = {
 
 export default function PortfolioPage() {
   const { user, profile } = useAuth();
+  const { t }             = useLanguage();
   const navigate          = useNavigate();
   const [intake, setIntake] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,15 +34,22 @@ export default function PortfolioPage() {
   if (loading) return <SkeletonPage />;
 
   const readiness = computeReadinessScore(intake);
-  const name      = intake?.individualName || profile?.displayName || "—";
+  const name      = intake?.individualName || profile?.displayName || t("portfolio.notProvided");
   const initial   = name.charAt(0).toUpperCase();
   const skills    = intake?.skills || {};
 
+  const SKILL_LABELS = {
+    independent: t("portfolio.skillIndependent"),
+    reminders:   t("portfolio.skillReminders"),
+    some_help:   t("portfolio.skillSomeHelp"),
+    full_support: t("portfolio.skillFullSupport"),
+  };
+
   const legalTags = [];
-  if (intake?.odspRegistered === "yes") legalTags.push({ label: "ODSP Active", cls: "tag-success" });
-  if (intake?.sdmInPlace === "yes")     legalTags.push({ label: "SDM in Place", cls: "tag-success" });
-  if (intake?.hensonTrust === "yes")    legalTags.push({ label: "Henson Trust", cls: "tag-success" });
-  if (intake?.odspRegistered === "applied") legalTags.push({ label: "ODSP Pending", cls: "tag-warn" });
+  if (intake?.odspRegistered === "yes") legalTags.push({ label: t("portfolio.odspActive"), cls: "tag-success" });
+  if (intake?.sdmInPlace === "yes")     legalTags.push({ label: t("portfolio.sdmInPlace"), cls: "tag-success" });
+  if (intake?.hensonTrust === "yes")    legalTags.push({ label: t("portfolio.hensonTrust"), cls: "tag-success" });
+  if (intake?.odspRegistered === "applied") legalTags.push({ label: t("portfolio.odspPending"), cls: "tag-warn" });
 
   return (
     <div className="page">
@@ -55,16 +57,16 @@ export default function PortfolioPage() {
         <div className="portfolio-avatar">{initial}</div>
         <div className="portfolio-info">
           <h2>{name}</h2>
-          <p>Independence Profile · Reena Partnership Program</p>
+          <p>{t("portfolio.subtitle")}</p>
           <div className="tag-row">
             <span className="tag tag-teal">
-              Readiness: {readiness}%
+              {t("portfolio.readiness", { score: readiness })}
             </span>
             <span className={`tag ${readiness >= 70 ? "tag-success" : readiness >= 40 ? "tag-warn" : "tag-navy"}`}>
-              {readiness >= 70 ? "Transition Ready" : readiness >= 40 ? "Building Skills" : "Early Stage"}
+              {readiness >= 70 ? t("portfolio.transitionReady") : readiness >= 40 ? t("portfolio.buildingSkills") : t("portfolio.earlyStage")}
             </span>
-            {legalTags.map((t) => (
-              <span key={t.label} className={`tag ${t.cls}`}>{t.label}</span>
+            {legalTags.map((tag) => (
+              <span key={tag.label} className={`tag ${tag.cls}`}>{tag.label}</span>
             ))}
           </div>
         </div>
@@ -73,15 +75,15 @@ export default function PortfolioPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 16 }}>
         {/* Life Skills */}
         <div className="card">
-          <div className="pcard-label">Life Skills Assessment</div>
+          <div className="pcard-label">{t("portfolio.skillsTitle")}</div>
           <ul className="skill-list">
             {[
-              ["Cooking",       "cooking"],
-              ["Budgeting",     "budgeting"],
-              ["Transit",       "transit"],
-              ["Medication",    "medication"],
-              ["Hygiene",       "hygiene"],
-              ["Communication", "communication"],
+              [t("portfolio.skillCooking"),       "cooking"],
+              [t("portfolio.skillBudgeting"),     "budgeting"],
+              [t("portfolio.skillTransit"),       "transit"],
+              [t("portfolio.skillMedication"),    "medication"],
+              [t("portfolio.skillHygiene"),       "hygiene"],
+              [t("portfolio.skillCommunication"), "communication"],
             ].map(([label, key]) => (
               <li key={key}>
                 <span style={{ minWidth: 90, fontSize: 12 }}>{label}</span>
@@ -89,7 +91,7 @@ export default function PortfolioPage() {
                   <div className="skill-bar-fill" style={{ width: `${SKILL_PCT[skills[key]] || 0}%` }} />
                 </div>
                 <span style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
-                  {SKILL_LABELS[skills[key]] || "—"}
+                  {SKILL_LABELS[skills[key]] || t("portfolio.notProvided")}
                 </span>
               </li>
             ))}
@@ -98,29 +100,29 @@ export default function PortfolioPage() {
 
         {/* Vision & Priorities */}
         <div className="card">
-          <div className="pcard-label">Vision Statement</div>
+          <div className="pcard-label">{t("portfolio.visionTitle")}</div>
           <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.7, marginBottom: 16, fontStyle: "italic" }}>
-            "{intake?.visionStatement || "Not yet completed."}"
+            "{intake?.visionStatement || t("portfolio.visionEmpty")}"
           </p>
-          <div className="pcard-label" style={{ marginTop: 8 }}>Priorities</div>
+          <div className="pcard-label" style={{ marginTop: 8 }}>{t("portfolio.prioritiesTitle")}</div>
           <div className="tag-row">
             {(intake?.priorities || []).map((p) => (
               <span key={p} className="tag tag-navy" style={{ fontSize: 11 }}>{p}</span>
             ))}
-            {!intake?.priorities?.length && <span style={{ fontSize: 12, color: "var(--text-muted)" }}>None selected</span>}
+            {!intake?.priorities?.length && <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("portfolio.prioritiesEmpty")}</span>}
           </div>
         </div>
 
         {/* Support Profile */}
         <div className="card">
-          <div className="pcard-label">Support Profile</div>
+          <div className="pcard-label">{t("portfolio.supportTitle")}</div>
           <div className="pcard-value" style={{ textTransform: "capitalize" }}>
-            {intake?.supportLevel || "—"} support level
+            {t("portfolio.supportLevel", { level: intake?.supportLevel || t("portfolio.notProvided") })}
           </div>
           <div className="pcard-note" style={{ marginBottom: 16 }}>
-            {{ low: "Check-ins and reminders only", medium: "Some on-site daily support", high: "Significant daily support needed" }[intake?.supportLevel] || "—"}
+            {{ low: t("portfolio.supportLow"), medium: t("portfolio.supportMedium"), high: t("portfolio.supportHigh") }[intake?.supportLevel] || t("portfolio.notProvided")}
           </div>
-          <div className="pcard-label">Housing Preferences</div>
+          <div className="pcard-label">{t("portfolio.housingTitle")}</div>
           <div className="tag-row">
             {(intake?.housingPreferences || []).map((h) => (
               <span key={h} className="tag tag-teal" style={{ fontSize: 11 }}>{h}</span>
@@ -128,7 +130,7 @@ export default function PortfolioPage() {
           </div>
           {intake?.preferredRegion && (
             <>
-              <div className="pcard-label" style={{ marginTop: 14 }}>Preferred Region</div>
+              <div className="pcard-label" style={{ marginTop: 14 }}>{t("portfolio.regionTitle")}</div>
               <div className="pcard-note">{intake.preferredRegion}</div>
             </>
           )}
@@ -136,24 +138,24 @@ export default function PortfolioPage() {
 
         {/* Legal & Financial */}
         <div className="card">
-          <div className="pcard-label">Legal & Financial</div>
+          <div className="pcard-label">{t("portfolio.legalTitle")}</div>
           <ul style={{ listStyle: "none", fontSize: 13 }}>
             <li style={{ padding: "6px 0", borderBottom: "0.5px solid var(--border)", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>ODSP</span>
+              <span style={{ color: "var(--text-muted)" }}>{t("portfolio.odsp")}</span>
               <span style={{ fontWeight: 500 }}>
-                {{ yes: "✅ Active", applied: "⏳ Pending", no: "Not applied", unsure: "Unknown" }[intake?.odspRegistered] || "—"}
+                {{ yes: t("portfolio.legalActive"), applied: t("portfolio.legalPending"), no: t("portfolio.legalNotApplied"), unsure: t("portfolio.legalUnknown") }[intake?.odspRegistered] || t("portfolio.notProvided")}
               </span>
             </li>
             <li style={{ padding: "6px 0", borderBottom: "0.5px solid var(--border)", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>SDM / Guardianship</span>
+              <span style={{ color: "var(--text-muted)" }}>{t("portfolio.sdm")}</span>
               <span style={{ fontWeight: 500 }}>
-                {{ yes: "✅ In place", in_progress: "⏳ In progress", no: "Not yet", unsure: "Unknown" }[intake?.sdmInPlace] || "—"}
+                {{ yes: t("portfolio.legalInPlace"), in_progress: t("portfolio.legalInProgress"), no: t("portfolio.legalNotYet"), unsure: t("portfolio.legalUnknown") }[intake?.sdmInPlace] || t("portfolio.notProvided")}
               </span>
             </li>
             <li style={{ padding: "6px 0", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "var(--text-muted)" }}>Henson Trust</span>
+              <span style={{ color: "var(--text-muted)" }}>{t("portfolio.hensonTrustRow")}</span>
               <span style={{ fontWeight: 500 }}>
-                {{ yes: "✅ Yes", in_progress: "⏳ In progress", no: "Not yet", unsure: "Unknown" }[intake?.hensonTrust] || "—"}
+                {{ yes: t("portfolio.legalYes"), in_progress: t("portfolio.legalInProgress"), no: t("portfolio.legalNotYet"), unsure: t("portfolio.legalUnknown") }[intake?.hensonTrust] || t("portfolio.notProvided")}
               </span>
             </li>
           </ul>
@@ -166,18 +168,18 @@ export default function PortfolioPage() {
 
         {/* Current Living Situation */}
         <div className="card">
-          <div className="pcard-label">Current Situation</div>
-          <div className="pcard-value">{intake?.livingSituation || "—"}</div>
-          <div className="pcard-note">Age: {intake?.individualAge || "—"}</div>
+          <div className="pcard-label">{t("portfolio.situationTitle")}</div>
+          <div className="pcard-value">{intake?.livingSituation || t("portfolio.notProvided")}</div>
+          <div className="pcard-note">{t("portfolio.age", { age: intake?.individualAge || t("portfolio.notProvided") })}</div>
           {intake?.caregiverName && (
             <>
-              <div className="pcard-label" style={{ marginTop: 14 }}>Primary Caregiver</div>
+              <div className="pcard-label" style={{ marginTop: 14 }}>{t("portfolio.caregiverTitle")}</div>
               <div className="pcard-value">{intake.caregiverName}</div>
             </>
           )}
           {intake?.additionalNotes && (
             <>
-              <div className="pcard-label" style={{ marginTop: 14 }}>Additional Notes</div>
+              <div className="pcard-label" style={{ marginTop: 14 }}>{t("portfolio.notesTitle")}</div>
               <div className="pcard-note">{intake.additionalNotes}</div>
             </>
           )}
@@ -186,12 +188,12 @@ export default function PortfolioPage() {
 
       <div style={{ marginTop: 24, padding: "16px 0" }}>
         <p style={{ fontSize: 12, color: "var(--text-muted)" }}>
-          This portfolio is shared with your assigned caseworker at Reena. To update it, redo your intake assessment.{" "}
+          {t("portfolio.footerNote")}{" "}
           <button
             onClick={() => navigate("/family/intake")}
             className="btn-link" style={{ fontSize: 12 }}
           >
-            Update intake →
+            {t("portfolio.updateIntake")}
           </button>
         </p>
       </div>

@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../hooks/useLanguage";
 
 export default function MatchesOverview() {
+  const { t } = useLanguage();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -23,13 +25,13 @@ export default function MatchesOverview() {
   return (
     <div className="page-wide">
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--navy)" }}>Confirmed Matches</h1>
-        <p style={{ fontSize: 14, color: "var(--text-muted)", marginTop: 4 }}>{matches.length} placement matches confirmed</p>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--navy)" }}>{t("matchesOverview.title")}</h1>
+        <p style={{ fontSize: 14, color: "var(--text-muted)", marginTop: 4 }}>{t("matchesOverview.subtitle", { count: matches.length })}</p>
       </div>
 
       {matches.length === 0 && (
         <div className="empty-state">
-          <p>No matches confirmed yet. Open a family profile and confirm a match from the Matches tab.</p>
+          <p>{t("matchesOverview.noMatches")}</p>
         </div>
       )}
 
@@ -37,11 +39,11 @@ export default function MatchesOverview() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Individual (UID)</th>
-              <th>Organization</th>
-              <th>Match Score</th>
-              <th>Status</th>
-              <th>Notes</th>
+              <th>{t("matchesOverview.colIndividual")}</th>
+              <th>{t("matchesOverview.colOrganization")}</th>
+              <th>{t("matchesOverview.colScore")}</th>
+              <th>{t("matchesOverview.colStatus")}</th>
+              <th>{t("matchesOverview.colNotes")}</th>
               <th></th>
             </tr>
           </thead>
@@ -54,14 +56,14 @@ export default function MatchesOverview() {
                   <span style={{ fontFamily: "Syne", fontWeight: 700, color: "var(--accent)" }}>{m.score}%</span>
                 </td>
                 <td>
-                  <span className="tag tag-success" style={{ fontSize: 11 }}>Confirmed</span>
+                  <span className="tag tag-success" style={{ fontSize: 11 }}>{t("matchesOverview.confirmed")}</span>
                 </td>
                 <td style={{ maxWidth: 200, fontSize: 12, color: "var(--text-muted)" }}>
-                  {m.note || "—"}
+                  {m.note || t("common.dash")}
                 </td>
                 <td>
                   <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/caseworker/families/${m.uid}`)}>
-                    View →
+                    {t("matchesOverview.view")}
                   </button>
                 </td>
               </tr>

@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, collection, getDocs, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase";
+import { useLanguage } from "../../hooks/useLanguage";
 import { computeReadinessScore, matchOrganizations, generateTimeline, applyStatuses } from "../../utils/matching";
-
-const SKILL_LABELS = { independent: "Independent", reminders: "With reminders", some_help: "With help", full_support: "Full support" };
 
 export default function FamilyDetail() {
   const { uid }    = useParams();
   const navigate   = useNavigate();
+  const { t, lang } = useLanguage();
   const [intake, setIntake]   = useState(null);
   const [matches, setMatches] = useState([]);
   const [timeline, setTimeline] = useState([]);
@@ -32,7 +32,7 @@ export default function FamilyDetail() {
       const orgsData   = orgsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setIntake(intakeData);
       setMatches(matchOrganizations(intakeData, orgsData));
-      setTimeline(applyStatuses(generateTimeline(intakeData), intakeData));
+      setTimeline(applyStatuses(generateTimeline(intakeData, t), intakeData, t));
       if (matchSnap.exists()) {
         setConfirmedMatch(matchSnap.data());
         setMatchNote(matchSnap.data().note || "");
@@ -40,7 +40,7 @@ export default function FamilyDetail() {
       setLoading(false);
     }
     load();
-  }, [uid, navigate]);
+  }, [uid, navigate, lang]);
 
   async function confirmMatch(org) {
     setSaving(true);
@@ -82,52 +82,73 @@ export default function FamilyDetail() {
   if (loading) return <SkeletonPage />;
 
   const readiness = computeReadinessScore(intake);
-  const name = intake?.individualName || "—";
+  const name = intake?.individualName || t("common.dash");
+
+  const SKILL_LABELS = {
+    independent: t("familyDetail.skillIndependent"),
+    reminders:   t("familyDetail.skillReminders"),
+    some_help:   t("familyDetail.skillSomeHelp"),
+    full_support: t("familyDetail.skillFullSupport"),
+  };
 
   const TABS = ["overview", "skills", "timeline", "matches"];
+  const TAB_LABELS = {
+    overview: t("familyDetail.tabOverview"),
+    skills:   t("familyDetail.tabSkills"),
+    timeline: t("familyDetail.tabTimeline"),
+    matches:  t("familyDetail.tabMatches"),
+  };
+
+  const [confirmedPrefix, confirmedSuffix] = confirmedMatch
+    ? t("familyDetail.confirmedMatch", { org: "{{org}}", score: confirmedMatch.score }).split("{{org}}")
+    : [];
 
   return (
     <div className="page-wide">
       <button className="btn btn-secondary btn-sm" onClick={() => navigate("/caseworker/families")} style={{ marginBottom: 20 }}>
-        ← Back to families
+        {t("familyDetail.backToFamilies")}
       </button>
 
       <div className="tl-header" style={{ marginBottom: 20 }}>
         <div className="tl-avatar">{name.charAt(0)}</div>
         <div className="tl-header-text">
           <h2>{name}</h2>
-          <p>Caregiver: {intake?.caregiverName || "—"} · Age: {intake?.individualAge || "—"} · {intake?.livingSituation || "—"}</p>
+          <p>{t("familyDetail.caregiverLine", {
+            caregiver: intake?.caregiverName || t("common.dash"),
+            age: intake?.individualAge || t("common.dash"),
+            situation: intake?.livingSituation || t("common.dash"),
+          })}</p>
         </div>
         <div className="progress-ring">
           {readiness}%
-          <span>Readiness</span>
+          <span>{t("familyDetail.readiness")}</span>
         </div>
       </div>
 
       {confirmedMatch && (
         <div className="alert alert-success" style={{ marginBottom: 16 }}>
-          ✅ Confirmed match: <strong>{confirmedMatch.orgName}</strong> (Score: {confirmedMatch.score}%)
+          {confirmedPrefix}<strong>{confirmedMatch.orgName}</strong>{confirmedSuffix}
           {confirmedMatch.note && ` — ${confirmedMatch.note}`}
         </div>
       )}
-      {saved && <div className="alert alert-success">Match saved successfully.</div>}
+      {saved && <div className="alert alert-success">{t("familyDetail.matchSaved")}</div>}
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid var(--border)", paddingBottom: 0, overflowX: "auto" }}>
-        {TABS.map((t) => (
+        {TABS.map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             style={{
               padding: "9px 18px", border: "none", background: "none",
               fontFamily: "DM Sans", fontSize: 14,
-              color: tab === t ? "var(--accent)" : "var(--text-muted)",
-              borderBottom: tab === t ? "2px solid var(--accent)" : "2px solid transparent",
-              fontWeight: tab === t ? 600 : 400, cursor: "pointer",
+              color: tab === tabKey ? "var(--accent)" : "var(--text-muted)",
+              borderBottom: tab === tabKey ? "2px solid var(--accent)" : "2px solid transparent",
+              fontWeight: tab === tabKey ? 600 : 400, cursor: "pointer",
               textTransform: "capitalize", transition: "color 0.2s",
             }}
           >
-            {t}
+            {TAB_LABELS[tabKey]}
           </button>
         ))}
       </div>
@@ -136,35 +157,35 @@ export default function FamilyDetail() {
       {tab === "overview" && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 16 }}>
           <div className="card">
-            <div className="pcard-label">Vision Statement</div>
+            <div className="pcard-label">{t("familyDetail.visionTitle")}</div>
             <p style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: "var(--text)" }}>
-              "{intake?.visionStatement || "Not provided"}"
+              "{intake?.visionStatement || t("familyDetail.visionEmpty")}"
             </p>
             {intake?.priorities?.length > 0 && (
               <>
-                <div className="pcard-label" style={{ marginTop: 14 }}>Priorities</div>
+                <div className="pcard-label" style={{ marginTop: 14 }}>{t("familyDetail.prioritiesTitle")}</div>
                 <div className="tag-row">{intake.priorities.map((p) => <span key={p} className="tag tag-navy" style={{ fontSize: 11 }}>{p}</span>)}</div>
               </>
             )}
           </div>
           <div className="card">
-            <div className="pcard-label">Support & Housing</div>
-            <div className="pcard-value" style={{ textTransform: "capitalize" }}>{intake?.supportLevel || "—"} support</div>
-            <div className="pcard-note" style={{ marginBottom: 12 }}>Preferred region: {intake?.preferredRegion || "—"}</div>
-            <div className="pcard-label">Housing preferences</div>
+            <div className="pcard-label">{t("familyDetail.supportHousingTitle")}</div>
+            <div className="pcard-value" style={{ textTransform: "capitalize" }}>{t("familyDetail.supportLevel", { level: intake?.supportLevel || t("common.dash") })}</div>
+            <div className="pcard-note" style={{ marginBottom: 12 }}>{t("familyDetail.preferredRegion", { region: intake?.preferredRegion || t("common.dash") })}</div>
+            <div className="pcard-label">{t("familyDetail.housingPreferences")}</div>
             <div className="tag-row">{(intake?.housingPreferences || []).map((h) => <span key={h} className="tag tag-teal" style={{ fontSize: 11 }}>{h}</span>)}</div>
           </div>
           <div className="card">
-            <div className="pcard-label">Legal & Financial</div>
+            <div className="pcard-label">{t("familyDetail.legalTitle")}</div>
             <ul style={{ listStyle: "none", fontSize: 13 }}>
               {[
-                ["ODSP", { yes: "✅ Active", applied: "⏳ Pending", no: "❌ Not applied" }[intake?.odspRegistered]],
-                ["SDM", { yes: "✅ In place", in_progress: "⏳ In progress", no: "❌ Not yet" }[intake?.sdmInPlace]],
-                ["Henson Trust", { yes: "✅ Yes", in_progress: "⏳ In progress", no: "❌ No" }[intake?.hensonTrust]],
+                [t("familyDetail.odsp"), { yes: t("familyDetail.legalActive"), applied: t("familyDetail.legalPending"), no: t("familyDetail.legalNotApplied") }[intake?.odspRegistered]],
+                [t("familyDetail.sdm"), { yes: t("familyDetail.legalInPlace"), in_progress: t("familyDetail.legalInProgress"), no: t("familyDetail.legalNotYet") }[intake?.sdmInPlace]],
+                [t("familyDetail.hensonTrust"), { yes: t("familyDetail.legalYes"), in_progress: t("familyDetail.legalInProgress"), no: t("familyDetail.legalNo") }[intake?.hensonTrust]],
               ].map(([label, val]) => (
                 <li key={label} style={{ padding: "6px 0", borderBottom: "0.5px solid var(--border)", display: "flex", justifyContent: "space-between" }}>
                   <span style={{ color: "var(--text-muted)" }}>{label}</span>
-                  <span style={{ fontWeight: 500 }}>{val || "—"}</span>
+                  <span style={{ fontWeight: 500 }}>{val || t("common.dash")}</span>
                 </li>
               ))}
             </ul>
@@ -172,7 +193,7 @@ export default function FamilyDetail() {
           </div>
           {intake?.additionalNotes && (
             <div className="card">
-              <div className="pcard-label">Additional Notes</div>
+              <div className="pcard-label">{t("familyDetail.additionalNotesTitle")}</div>
               <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.7 }}>{intake.additionalNotes}</p>
             </div>
           )}
@@ -182,9 +203,16 @@ export default function FamilyDetail() {
       {/* Skills Tab */}
       {tab === "skills" && (
         <div className="card" style={{ maxWidth: 480 }}>
-          <div className="pcard-label" style={{ marginBottom: 14 }}>Life Skills Assessment</div>
+          <div className="pcard-label" style={{ marginBottom: 14 }}>{t("familyDetail.skillsTitle")}</div>
           <ul className="skill-list">
-            {[["Cooking", "cooking"], ["Budgeting", "budgeting"], ["Transit", "transit"], ["Medication", "medication"], ["Hygiene", "hygiene"], ["Communication", "communication"]].map(([label, key]) => {
+            {[
+              [t("familyDetail.skillCooking"), "cooking"],
+              [t("familyDetail.skillBudgeting"), "budgeting"],
+              [t("familyDetail.skillTransit"), "transit"],
+              [t("familyDetail.skillMedication"), "medication"],
+              [t("familyDetail.skillHygiene"), "hygiene"],
+              [t("familyDetail.skillCommunication"), "communication"],
+            ].map(([label, key]) => {
               const val = intake?.skills?.[key];
               const pct = { independent: 100, reminders: 70, some_help: 45, full_support: 20 }[val] || 0;
               return (
@@ -193,7 +221,7 @@ export default function FamilyDetail() {
                   <div className="skill-bar-wrap">
                     <div className="skill-bar-fill" style={{ width: `${pct}%` }} />
                   </div>
-                  <span style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{SKILL_LABELS[val] || "—"}</span>
+                  <span style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{SKILL_LABELS[val] || t("common.dash")}</span>
                 </li>
               );
             })}
@@ -205,7 +233,7 @@ export default function FamilyDetail() {
       {tab === "timeline" && (
         <div>
           <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 16 }}>
-            Family self-reported progress shown below. Verify a milestone once you've confirmed the family's completion note as evidence.
+            {t("familyDetail.timelineHint")}
           </p>
           {timeline.map((phase) => (
             <div className="phase-section" key={phase.phaseKey}>
@@ -233,21 +261,21 @@ export default function FamilyDetail() {
                   </div>
                   <div className="m-status-col">
                     <div className={`m-badge ${item.status}`}>
-                      {item.status === "done" ? "Done" : item.status === "active" ? "In Progress" : "Upcoming"}
+                      {item.status === "done" ? t("familyDetail.statusDone") : item.status === "active" ? t("familyDetail.statusActive") : t("familyDetail.statusPending")}
                     </div>
-                    {item.auto && <span className="m-auto-badge">Auto</span>}
+                    {item.auto && <span className="m-auto-badge">{t("familyDetail.autoBadge")}</span>}
                     {item.status === "done" && !item.caseworkerVerified && (
                       <button
                         className="btn btn-sm btn-primary"
                         style={{ fontSize: 11, padding: "3px 10px" }}
                         onClick={() => setMilestoneVerified(item.id, true)}
                       >
-                        Verify ✓
+                        {t("familyDetail.verify")}
                       </button>
                     )}
                     {item.status === "done" && item.caseworkerVerified && (
-                      <span className="m-verified-badge" style={{ cursor: "pointer" }} onClick={() => setMilestoneVerified(item.id, false)} title="Click to remove verification">
-                        Caseworker ✓
+                      <span className="m-verified-badge" style={{ cursor: "pointer" }} onClick={() => setMilestoneVerified(item.id, false)} title={t("familyDetail.removeVerificationTitle")}>
+                        {t("familyDetail.caseworkerVerified")}
                       </span>
                     )}
                   </div>
@@ -262,11 +290,11 @@ export default function FamilyDetail() {
       {tab === "matches" && (
         <div>
           <div className="card" style={{ marginBottom: 20 }}>
-            <div className="pcard-label">Caseworker Notes on Match</div>
+            <div className="pcard-label">{t("familyDetail.matchNotesTitle")}</div>
             <textarea
               className="field"
               style={{ width: "100%", marginTop: 8 }}
-              placeholder="Add notes about why this match was selected, any special considerations…"
+              placeholder={t("familyDetail.matchNotesPlaceholder")}
               value={matchNote}
               onChange={(e) => setMatchNote(e.target.value)}
               rows={3}
@@ -279,21 +307,21 @@ export default function FamilyDetail() {
                 <h3>{org.name}</h3>
                 <p>{org.description}</p>
                 <div className="tag-row">
-                  {org.hasOpenings && <span className="tag tag-success" style={{ fontSize: 11 }}>Available</span>}
-                  {(org.tags || []).map((t) => <span key={t} className="tag tag-teal" style={{ fontSize: 11 }}>{t}</span>)}
+                  {org.hasOpenings && <span className="tag tag-success" style={{ fontSize: 11 }}>{t("familyDetail.available")}</span>}
+                  {(org.tags || []).map((tag) => <span key={tag} className="tag tag-teal" style={{ fontSize: 11 }}>{tag}</span>)}
                 </div>
               </div>
               <div style={{ flexShrink: 0, textAlign: "right", display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
                 <div>
                   <div className="match-score">{org.matchScore}%</div>
-                  <div className="match-label">Match</div>
+                  <div className="match-label">{t("familyDetail.matchScoreLabel")}</div>
                 </div>
                 <button
                   className={`btn btn-sm ${confirmedMatch?.orgId === org.id ? "btn-primary" : "btn-navy"}`}
                   onClick={() => confirmMatch(org)}
                   disabled={saving}
                 >
-                  {confirmedMatch?.orgId === org.id ? "✓ Confirmed" : "Confirm Match"}
+                  {confirmedMatch?.orgId === org.id ? t("familyDetail.confirmed") : t("familyDetail.confirmMatch")}
                 </button>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../hooks/useLanguage";
 import { generateTimeline, computeReadinessScore, applyStatuses } from "../../utils/matching";
 
 async function persistStatuses(uid, updated) {
@@ -25,6 +26,7 @@ async function persistStatuses(uid, updated) {
 
 export default function TimelinePage() {
   const { user }     = useAuth();
+  const { t, lang }  = useLanguage();
   const navigate     = useNavigate();
   const [intake, setIntake]     = useState(null);
   const [timeline, setTimeline] = useState([]);
@@ -42,11 +44,11 @@ export default function TimelinePage() {
       if (!snap.exists()) { navigate("/family/intake"); return; }
       const data = snap.data();
       setIntake(data);
-      setTimeline(applyStatuses(generateTimeline(data), data));
+      setTimeline(applyStatuses(generateTimeline(data, t), data, t));
       setLoading(false);
     }
     load();
-  }, [user.uid, navigate]);
+  }, [user.uid, navigate, lang]);
 
   function handleMilestoneClick(pi, ii) {
     const item = timeline[pi].items[ii];
@@ -93,51 +95,51 @@ export default function TimelinePage() {
   if (loading) return <SkeletonPage />;
 
   const readiness = computeReadinessScore(intake);
-  const name = intake?.individualName || "Your";
+  const name = intake?.individualName || t("timeline.titleFallbackName");
   const initial = name.charAt(0).toUpperCase();
 
   const totalItems = timeline.reduce((s, p) => s + p.items.length, 0);
   const doneItems  = timeline.reduce((s, p) => s + p.items.filter((i) => i.status === "done").length, 0);
   const pct = totalItems ? Math.round((doneItems / totalItems) * 100) : 0;
 
+  const [instrPrefix, instrSuffix] = t("timeline.instructions", { auto: "{{auto}}" }).split("{{auto}}");
+
   return (
     <div className="page">
       <div className="tl-header">
         <div className="tl-avatar">{initial}</div>
         <div className="tl-header-text">
-          <h2>{name}'s Independence Timeline</h2>
-          <p>Personalized pathway · {doneItems} of {totalItems} milestones complete</p>
+          <h2>{t("timeline.title", { name })}</h2>
+          <p>{t("timeline.progressLine", { done: doneItems, total: totalItems })}</p>
         </div>
         <div className="progress-ring">
           {pct}%
-          <span>Complete</span>
+          <span>{t("timeline.complete")}</span>
         </div>
       </div>
 
       <div className="card" style={{ marginBottom: 24, display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
         <div>
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>Readiness Score</p>
-          <div className="score-ring">{readiness}<span>/ 100</span></div>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>{t("timeline.readinessScore")}</p>
+          <div className="score-ring">{readiness}<span>{t("timeline.of100")}</span></div>
         </div>
         <div className="divider" style={{ width: 1, height: 48, margin: 0 }} />
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
             {readiness >= 75
-              ? "Great readiness — you're well prepared for the transition process."
+              ? t("timeline.msgHigh")
               : readiness >= 50
-              ? "Good foundation — a few more skills to build before placement."
-              : "Early stage — your timeline includes skill-building milestones to get you ready."}
+              ? t("timeline.msgMid")
+              : t("timeline.msgLow")}
           </p>
         </div>
         <button className="btn btn-secondary btn-sm" onClick={() => navigate("/family/resources")}>
-          View Matches →
+          {t("timeline.viewMatches")}
         </button>
       </div>
 
       <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20 }}>
-        Click a milestone to start it, then click again when ready to record your completion.
-        Once marked complete, a milestone is final and can't be reopened — your caseworker will verify it from there.
-        Milestones marked <strong>Auto</strong> are verified directly from your intake answers.
+        {instrPrefix}<strong>{t("timeline.autoBadge")}</strong>{instrSuffix}
       </p>
 
       {timeline.map((phase, pi) => (
@@ -171,10 +173,10 @@ export default function TimelinePage() {
               </div>
               <div className="m-status-col">
                 <div className={`m-badge ${item.status}`}>
-                  {item.status === "done" ? "Done" : item.status === "active" ? "In Progress" : "Upcoming"}
+                  {item.status === "done" ? t("timeline.statusDone") : item.status === "active" ? t("timeline.statusActive") : t("timeline.statusPending")}
                 </div>
-                {item.auto && <span className="m-auto-badge">Auto</span>}
-                {item.caseworkerVerified && <span className="m-verified-badge">Caseworker ✓</span>}
+                {item.auto && <span className="m-auto-badge">{t("timeline.autoBadge")}</span>}
+                {item.caseworkerVerified && <span className="m-verified-badge">{t("timeline.caseworkerVerified")}</span>}
               </div>
             </div>
           ))}
@@ -188,14 +190,14 @@ export default function TimelinePage() {
           onClick={(e) => { if (e.target === e.currentTarget && !saving) setModal(null); }}
         >
           <div className="modal">
-            <h3>Mark as Complete</h3>
+            <h3>{t("timeline.modalTitle")}</h3>
             <p className="modal-sub">
               <strong>{modal.item.title}</strong><br />
-              Briefly describe what you did. Your caseworker will see this note as evidence of completion.
+              {t("timeline.modalInstructions")}
             </p>
 
             <div className="field">
-              <label>Date completed</label>
+              <label>{t("timeline.dateCompletedLabel")}</label>
               <input
                 type="date"
                 value={reflectDate}
@@ -206,11 +208,11 @@ export default function TimelinePage() {
 
             <div className="field">
               <label>
-                What did you do? How did it go?{" "}
+                {t("timeline.reflectionLabel")}{" "}
                 <span style={{ color: "var(--danger)" }}>*</span>
               </label>
               <textarea
-                placeholder="e.g. Attended 4 budgeting sessions at Reena community centre. Learned how to create a monthly budget and track spending."
+                placeholder={t("timeline.reflectionPlaceholder")}
                 value={reflectNote}
                 onChange={(e) => setReflectNote(e.target.value)}
                 rows={4}
@@ -223,10 +225,10 @@ export default function TimelinePage() {
                 onClick={submitReflection}
                 disabled={saving || !reflectNote.trim() || !reflectDate}
               >
-                {saving ? "Saving…" : "Mark as Done ✓"}
+                {saving ? t("timeline.saving") : t("timeline.markDone")}
               </button>
               <button className="btn btn-secondary" onClick={() => setModal(null)} disabled={saving}>
-                Cancel
+                {t("timeline.cancel")}
               </button>
             </div>
           </div>

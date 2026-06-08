@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
+import { LanguageProvider } from "./hooks/useLanguage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Splash from "./components/Splash";
 import Nav from "./components/Nav";
@@ -107,10 +108,12 @@ function AppShell() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppShell />
-      </BrowserRouter>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppShell />
+        </BrowserRouter>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

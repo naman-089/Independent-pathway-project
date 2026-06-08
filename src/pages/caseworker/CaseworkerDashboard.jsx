@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../hooks/useLanguage";
 
 export default function CaseworkerDashboard() {
+  const { t } = useLanguage();
   const [stats, setStats]   = useState({ families: 0, submitted: 0, highSupport: 0 });
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,57 +39,57 @@ export default function CaseworkerDashboard() {
     <div className="page">
       <div className="hero" style={{ marginBottom: 28 }}>
         <div className="hero-deco hero-deco-1" />
-        <div className="hero-badge">Caseworker Dashboard</div>
-        <h1>Family Transition Overview</h1>
-        <p>Review intake assessments, track milestones, and manage placement matches for families in the program.</p>
+        <div className="hero-badge">{t("caseworkerDashboard.heroBadge")}</div>
+        <h1>{t("caseworkerDashboard.title")}</h1>
+        <p>{t("caseworkerDashboard.body")}</p>
         <button className="btn btn-primary" onClick={() => navigate("/caseworker/families")}>
-          View All Families →
+          {t("caseworkerDashboard.viewAllFamilies")}
         </button>
       </div>
 
       <div className="stat-grid" style={{ marginBottom: 28 }}>
         <div className="stat-card">
           <div className="stat-num">{stats.families}</div>
-          <div className="stat-label">Registered families</div>
+          <div className="stat-label">{t("caseworkerDashboard.statFamilies")}</div>
         </div>
         <div className="stat-card">
           <div className="stat-num">{stats.submitted}</div>
-          <div className="stat-label">Intakes submitted</div>
+          <div className="stat-label">{t("caseworkerDashboard.statSubmitted")}</div>
         </div>
         <div className="stat-card">
           <div className="stat-num" style={{ color: "var(--danger)" }}>{stats.highSupport}</div>
-          <div className="stat-label">Require high support</div>
+          <div className="stat-label">{t("caseworkerDashboard.statHighSupport")}</div>
         </div>
       </div>
 
-      <div className="section-title">Recent Intake Submissions</div>
-      {recent.length === 0 && <div className="empty-state"><p>No intakes submitted yet.</p></div>}
+      <div className="section-title">{t("caseworkerDashboard.recentTitle")}</div>
+      {recent.length === 0 && <div className="empty-state"><p>{t("caseworkerDashboard.noIntakes")}</p></div>}
       <div className="card">
         <table className="data-table">
           <thead>
             <tr>
-              <th>Individual</th>
-              <th>Support Level</th>
-              <th>Region</th>
-              <th>Status</th>
+              <th>{t("caseworkerDashboard.colIndividual")}</th>
+              <th>{t("caseworkerDashboard.colSupportLevel")}</th>
+              <th>{t("caseworkerDashboard.colRegion")}</th>
+              <th>{t("caseworkerDashboard.colStatus")}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {recent.map((intake) => (
               <tr key={intake.id}>
-                <td style={{ fontWeight: 500 }}>{intake.individualName || "—"}</td>
+                <td style={{ fontWeight: 500 }}>{intake.individualName || t("common.dash")}</td>
                 <td>
                   <span className={`tag tag-sm ${intake.supportLevel === "high" ? "tag-danger" : intake.supportLevel === "medium" ? "tag-warn" : "tag-success"}`}
                     style={{ padding: "3px 10px", borderRadius: 50, fontSize: 11 }}>
-                    {intake.supportLevel || "—"}
+                    {intake.supportLevel || t("common.dash")}
                   </span>
                 </td>
-                <td>{intake.preferredRegion || "—"}</td>
-                <td><span className="tag tag-teal" style={{ fontSize: 11 }}>Submitted</span></td>
+                <td>{intake.preferredRegion || t("common.dash")}</td>
+                <td><span className="tag tag-teal" style={{ fontSize: 11 }}>{t("caseworkerDashboard.submitted")}</span></td>
                 <td>
                   <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/caseworker/families/${intake.id}`)}>
-                    View →
+                    {t("caseworkerDashboard.view")}
                   </button>
                 </td>
               </tr>

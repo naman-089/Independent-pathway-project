@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { getDoc, doc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
+import { useLanguage } from "../hooks/useLanguage";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 import { getAuthErrorMessage } from "../utils/errorMessages";
 
 const ROLES = [
-  { value: "family",     label: "Family / Individual", icon: "🏠" },
-  { value: "caseworker", label: "Caseworker",           icon: "👤" },
-  { value: "admin",      label: "Admin",                icon: "⚙️" },
+  { value: "family",     labelKey: "auth.roleFamily",     icon: "🏠" },
+  { value: "caseworker", labelKey: "auth.roleCaseworker", icon: "👤" },
+  { value: "admin",      labelKey: "auth.roleAdmin",      icon: "⚙️" },
 ];
 
 const STAFF_ROLES = new Set(["caseworker", "admin"]);
@@ -21,17 +23,6 @@ function validateStaffCode(role, code) {
       : import.meta.env.VITE_CASEWORKER_CODE;
   return expected && code === expected;
 }
-
-const TITLES = {
-  login:  "Welcome back",
-  signup: "Create your account",
-  reset:  "Reset your password",
-};
-const SUBS = {
-  login:  "Sign in to access your Independence Pathway Platform",
-  signup: "Join the platform and start building your pathway to independence",
-  reset:  "Enter your email and we'll send you a reset link.",
-};
 
 export default function AuthPage() {
   const [mode, setMode]               = useState("login");
@@ -47,7 +38,11 @@ export default function AuthPage() {
   const [loading, setLoading]         = useState(false);
 
   const { login, signup, resetPassword, connectionIssue } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
+
+  const TITLES = { login: t("auth.titleLogin"), signup: t("auth.titleSignup"), reset: t("auth.titleReset") };
+  const SUBS   = { login: t("auth.subLogin"),   signup: t("auth.subSignup"),   reset: t("auth.subReset")   };
 
   function redirect(r) {
     if (r === "caseworker") navigate("/caseworker");
@@ -67,7 +62,7 @@ export default function AuthPage() {
         redirect(snap.data()?.role || "family");
       } else {
         if (!validateStaffCode(role, staffCode)) {
-          setError("Invalid access code for this role. Contact your administrator.");
+          setError(t("auth.invalidStaffCode"));
           setLoading(false);
           return;
         }
@@ -97,14 +92,16 @@ export default function AuthPage() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4 }}>
+          <LanguageSwitcher onLight />
+        </div>
         <div className="auth-logo">IP<em>P</em></div>
         <h2 className="auth-title">{TITLES[mode]}</h2>
         <p className="auth-sub">{SUBS[mode]}</p>
 
         {connectionIssue && (
           <div className="alert alert-warn">
-            We couldn't reach the server in time, so we couldn't check whether you're already signed in.
-            Check your connection and sign in again — your account is fine.
+            {t("auth.connectionIssue")}
           </div>
         )}
         {error && <div className="alert alert-danger">{error}</div>}
@@ -114,24 +111,24 @@ export default function AuthPage() {
           <>
             {resetSent ? (
               <div className="alert alert-success">
-                Check your inbox for a reset link — check spam if you don't see it.
+                {t("auth.resetSent")}
               </div>
             ) : (
               <form onSubmit={handleReset}>
                 <div className="field">
-                  <label>Email address</label>
-                  <input type="email" required placeholder="you@example.com"
+                  <label>{t("auth.emailLabel")}</label>
+                  <input type="email" required placeholder={t("auth.emailPlaceholder")}
                     value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
                 <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-                  {loading ? "Sending…" : "Send reset email →"}
+                  {loading ? t("auth.sendingReset") : t("auth.sendResetEmail")}
                 </button>
               </form>
             )}
             <div className="divider" style={{ margin: "24px 0" }} />
             <p style={{ textAlign: "center", fontSize: 14, color: "var(--text-muted)" }}>
               <button onClick={() => switchMode("login")} className="btn-link">
-                ← Back to sign in
+                {t("auth.backToSignIn")}
               </button>
             </p>
           </>
@@ -141,7 +138,7 @@ export default function AuthPage() {
         {mode === "signup" && (
           <>
             <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 10 }}>
-              I am signing up as a:
+              {t("auth.signingUpAs")}
             </p>
             <div className="role-picker" role="radiogroup" aria-label="Select your role">
               {ROLES.map((r) => (
@@ -155,7 +152,7 @@ export default function AuthPage() {
                   aria-checked={role === r.value}
                 >
                   <div className="role-icon">{r.icon}</div>
-                  <div className="role-label">{r.label}</div>
+                  <div className="role-label">{t(r.labelKey)}</div>
                 </div>
               ))}
             </div>
@@ -167,38 +164,38 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit}>
             {mode === "signup" && (
               <div className="field">
-                <label>Full name</label>
-                <input type="text" required placeholder="Your full name"
+                <label>{t("auth.fullNameLabel")}</label>
+                <input type="text" required placeholder={t("auth.fullNamePlaceholder")}
                   value={name} onChange={(e) => setName(e.target.value)} />
               </div>
             )}
 
             {mode === "signup" && STAFF_ROLES.has(role) && (
               <div className="field">
-                <label>Staff access code</label>
+                <label>{t("auth.staffCodeLabel")}</label>
                 <input
                   type="password" required
-                  placeholder="Enter your access code"
+                  placeholder={t("auth.staffCodePlaceholder")}
                   value={staffCode}
                   onChange={(e) => setStaffCode(e.target.value)}
                   autoComplete="off"
                 />
-                <p className="field-hint">Required for caseworker and admin accounts. Contact your administrator.</p>
+                <p className="field-hint">{t("auth.staffCodeHint")}</p>
               </div>
             )}
 
             <div className="field">
-              <label>Email address</label>
-              <input type="email" required placeholder="you@example.com"
+              <label>{t("auth.emailLabel")}</label>
+              <input type="email" required placeholder={t("auth.emailPlaceholder")}
                 value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
 
             <div className="field">
-              <label>Password</label>
+              <label>{t("auth.passwordLabel")}</label>
               <div style={{ position: "relative" }}>
                 <input
                   type={showPassword ? "text" : "password"} required
-                  placeholder={mode === "signup" ? "At least 6 characters" : "Your password"}
+                  placeholder={mode === "signup" ? t("auth.passwordPlaceholderSignup") : t("auth.passwordPlaceholderLogin")}
                   value={password} onChange={(e) => setPassword(e.target.value)}
                   style={{ paddingRight: 56 }}
                 />
@@ -213,7 +210,7 @@ export default function AuthPage() {
                     fontFamily: "DM Sans, sans-serif", padding: "0 4px",
                   }}
                 >
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                 </button>
               </div>
             </div>
@@ -224,18 +221,18 @@ export default function AuthPage() {
                   <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--text-muted)", cursor: "pointer" }}>
                     <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}
                       style={{ width: 15, height: 15, accentColor: "var(--accent)", cursor: "pointer" }} />
-                    Remember me
+                    {t("auth.rememberMe")}
                   </label>
                   <button type="button" onClick={() => switchMode("reset")}
                     className="btn-link" style={{ fontWeight: 500, fontSize: 13 }}>
-                    Forgot password?
+                    {t("auth.forgotPassword")}
                   </button>
                 </div>
               </>
             )}
 
             <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
-              {loading ? "Please wait…" : mode === "login" ? "Sign in →" : "Create account →"}
+              {loading ? t("auth.pleaseWait") : mode === "login" ? t("auth.signIn") : t("auth.createAccount")}
             </button>
           </form>
         )}
@@ -244,12 +241,12 @@ export default function AuthPage() {
           <>
             <div className="divider" style={{ margin: "24px 0" }} />
             <p style={{ textAlign: "center", fontSize: 14, color: "var(--text-muted)" }}>
-              {mode === "login" ? "Don't have an account? " : "Already have an account? "}
+              {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
               <button
                 onClick={() => switchMode(mode === "login" ? "signup" : "login")}
                 className="btn-link"
               >
-                {mode === "login" ? "Sign up" : "Sign in"}
+                {mode === "login" ? t("auth.signUp") : t("auth.switchToSignIn")}
               </button>
             </p>
           </>

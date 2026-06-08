@@ -3,43 +3,47 @@ import { useNavigate } from "react-router-dom";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
+import { useLanguage } from "../../hooks/useLanguage";
 import SkeletonPage from "../../components/Skeleton";
 
 const SKILL_OPTIONS = [
-  { value: "full_support", label: "I need full support" },
-  { value: "some_help",    label: "I can do some with help" },
-  { value: "reminders",    label: "I manage with reminders" },
-  { value: "independent",  label: "I do this independently" },
+  { value: "full_support", labelKey: "intake.skillFullSupport" },
+  { value: "some_help",    labelKey: "intake.skillSomeHelp" },
+  { value: "reminders",    labelKey: "intake.skillReminders" },
+  { value: "independent",  labelKey: "intake.skillIndependent" },
 ];
 
+// `value` is what gets persisted to Firestore (and shown verbatim to
+// caseworkers in FamilyDetail) — keep it as stable English text, and only
+// translate the `labelKey` shown to the family filling out the form.
 const HOUSING_TYPES = [
-  "Own apartment in a supported building",
-  "Shared home with peers",
-  "Small group home",
-  "Intentional community",
-  "Host family / homeshare",
+  { value: "Own apartment in a supported building", labelKey: "intake.housing1" },
+  { value: "Shared home with peers",                labelKey: "intake.housing2" },
+  { value: "Small group home",                      labelKey: "intake.housing3" },
+  { value: "Intentional community",                 labelKey: "intake.housing4" },
+  { value: "Host family / homeshare",               labelKey: "intake.housing5" },
 ];
 
 const PRIORITIES = [
-  "Having friends nearby",
-  "Employment",
-  "Creative expression",
-  "Routine & structure",
-  "Community involvement",
-  "Cultural connection",
-  "Physical activity",
-  "Privacy & independence",
+  { value: "Having friends nearby",   labelKey: "intake.priority1" },
+  { value: "Employment",              labelKey: "intake.priority2" },
+  { value: "Creative expression",     labelKey: "intake.priority3" },
+  { value: "Routine & structure",     labelKey: "intake.priority4" },
+  { value: "Community involvement",   labelKey: "intake.priority5" },
+  { value: "Cultural connection",     labelKey: "intake.priority6" },
+  { value: "Physical activity",       labelKey: "intake.priority7" },
+  { value: "Privacy & independence",  labelKey: "intake.priority8" },
 ];
 
 const REGIONS = [
-  "Toronto (GTA)",
-  "North York",
-  "Thornhill / Vaughan",
-  "Scarborough",
-  "Etobicoke / Mississauga",
-  "York Region",
-  "Durham Region",
-  "Other Ontario",
+  { value: "Toronto (GTA)",            labelKey: "intake.region1" },
+  { value: "North York",               labelKey: "intake.region2" },
+  { value: "Thornhill / Vaughan",      labelKey: "intake.region3" },
+  { value: "Scarborough",              labelKey: "intake.region4" },
+  { value: "Etobicoke / Mississauga",  labelKey: "intake.region5" },
+  { value: "York Region",              labelKey: "intake.region6" },
+  { value: "Durham Region",            labelKey: "intake.region7" },
+  { value: "Other Ontario",            labelKey: "intake.region8" },
 ];
 
 const EMPTY_FORM = {
@@ -60,14 +64,14 @@ const EMPTY_FORM = {
   additionalNotes:    "",
 };
 
-function SkillSelect({ label, field, value, onChange }) {
+function SkillSelect({ label, field, value, onChange, t }) {
   return (
     <div className="field">
       <label>{label}</label>
       <select value={value || ""} onChange={(e) => onChange(field, e.target.value)}>
-        <option value="">Select…</option>
+        <option value="">{t("intake.skillSelectPlaceholder")}</option>
         {SKILL_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
+          <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
         ))}
       </select>
     </div>
@@ -91,6 +95,7 @@ function Chip({ label, selected, onToggle }) {
 
 export default function IntakePage() {
   const { user, profile } = useAuth();
+  const { t }             = useLanguage();
   const navigate          = useNavigate();
   const [step, setStep]   = useState(1);
   const [saving, setSaving]     = useState(false);
@@ -180,7 +185,7 @@ export default function IntakePage() {
       await setDoc(doc(db, "users", user.uid), { intakeComplete: true }, { merge: true });
       navigate("/family/timeline");
     } catch (err) {
-      setError("Failed to save: " + err.message);
+      setError(t("intake.submitError", { message: err.message }));
     } finally {
       setSaving(false);
     }
@@ -199,41 +204,41 @@ export default function IntakePage() {
 
         {isEditing && (
           <div className="alert alert-warn" style={{ marginBottom: 20 }}>
-            You're editing a submitted intake. Changes will update your timeline and matches.
+            {t("intake.editingNotice")}
           </div>
         )}
 
         {/* ── STEP 1 ── */}
         {step === 1 && (
           <div>
-            <p className="step-eyebrow">Step 1 of 5 — About You</p>
-            <h2 className="step-title">Let's start with the basics</h2>
-            <p className="step-sub">This profile helps us personalize your pathway. All information is private and shared only with your caseworker.</p>
+            <p className="step-eyebrow">{t("intake.step1Eyebrow")}</p>
+            <h2 className="step-title">{t("intake.step1Title")}</h2>
+            <p className="step-sub">{t("intake.step1Sub")}</p>
             <div className="field">
-              <label>Individual's full name</label>
-              <input type="text" placeholder="e.g. Jordan Chen" value={form.individualName} onChange={(e) => setField("individualName", e.target.value)} />
+              <label>{t("intake.nameLabel")}</label>
+              <input type="text" placeholder={t("intake.namePlaceholder")} value={form.individualName} onChange={(e) => setField("individualName", e.target.value)} />
             </div>
             <div className="field">
-              <label>Age</label>
-              <input type="number" placeholder="e.g. 24" min={1} max={99} value={form.individualAge} onChange={(e) => setField("individualAge", e.target.value)} />
+              <label>{t("intake.ageLabel")}</label>
+              <input type="number" placeholder={t("intake.agePlaceholder")} min={1} max={99} value={form.individualAge} onChange={(e) => setField("individualAge", e.target.value)} />
             </div>
             <div className="field">
-              <label>Primary caregiver name</label>
-              <input type="text" placeholder="e.g. Linda Chen" value={form.caregiverName} onChange={(e) => setField("caregiverName", e.target.value)} />
+              <label>{t("intake.caregiverLabel")}</label>
+              <input type="text" placeholder={t("intake.caregiverPlaceholder")} value={form.caregiverName} onChange={(e) => setField("caregiverName", e.target.value)} />
             </div>
             <div className="field">
-              <label>Current living situation</label>
+              <label>{t("intake.livingSituationLabel")}</label>
               <select value={form.livingSituation} onChange={(e) => setField("livingSituation", e.target.value)}>
-                <option value="">Select…</option>
-                <option>Living with family</option>
-                <option>Group home</option>
-                <option>Supported apartment</option>
-                <option>Hospital / long-term care</option>
-                <option>Other</option>
+                <option value="">{t("common.select")}</option>
+                <option>{t("intake.livingFamily")}</option>
+                <option>{t("intake.livingGroupHome")}</option>
+                <option>{t("intake.livingSupportedApt")}</option>
+                <option>{t("intake.livingHospital")}</option>
+                <option>{t("intake.livingOther")}</option>
               </select>
             </div>
             <div className="step-actions">
-              <button className="btn btn-primary" onClick={nextStep}>Continue →</button>
+              <button className="btn btn-primary" onClick={nextStep}>{t("common.continue")}</button>
             </div>
           </div>
         )}
@@ -241,25 +246,25 @@ export default function IntakePage() {
         {/* ── STEP 2 ── */}
         {step === 2 && (
           <div>
-            <p className="step-eyebrow">Step 2 of 5 — Vision & Goals</p>
-            <h2 className="step-title">What does independence look like?</h2>
-            <p className="step-sub">There's no single definition. Tell us what matters most — we'll shape the pathway around it.</p>
+            <p className="step-eyebrow">{t("intake.step2Eyebrow")}</p>
+            <h2 className="step-title">{t("intake.step2Title")}</h2>
+            <p className="step-sub">{t("intake.step2Sub")}</p>
             <div className="field">
-              <label>Describe your vision for independent living</label>
-              <textarea placeholder="e.g. I want to have my own apartment, cook my own meals, go to work..."
+              <label>{t("intake.visionLabel")}</label>
+              <textarea placeholder={t("intake.visionPlaceholder")}
                 value={form.visionStatement} onChange={(e) => setField("visionStatement", e.target.value)} />
             </div>
             <div className="field">
-              <label>What matters most in daily life? (select all that apply)</label>
+              <label>{t("intake.prioritiesLabel")}</label>
               <div className="chip-group">
                 {PRIORITIES.map((p) => (
-                  <Chip key={p} label={p} selected={form.priorities.includes(p)} onToggle={() => toggleArr("priorities", p)} />
+                  <Chip key={p.value} label={t(p.labelKey)} selected={form.priorities.includes(p.value)} onToggle={() => toggleArr("priorities", p.value)} />
                 ))}
               </div>
             </div>
             <div className="step-actions">
-              <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
-              <button className="btn btn-primary" onClick={nextStep}>Continue →</button>
+              <button className="btn btn-secondary" onClick={prevStep}>{t("common.back")}</button>
+              <button className="btn btn-primary" onClick={nextStep}>{t("common.continue")}</button>
             </div>
           </div>
         )}
@@ -267,18 +272,18 @@ export default function IntakePage() {
         {/* ── STEP 3 ── */}
         {step === 3 && (
           <div>
-            <p className="step-eyebrow">Step 3 of 5 — Life Skills</p>
-            <h2 className="step-title">Everyday independence skills</h2>
-            <p className="step-sub">Rate your current comfort level. There are no wrong answers — this builds your readiness score and shapes your milestones.</p>
-            <SkillSelect label="Cooking & meal preparation"     field="cooking"        value={form.skills.cooking}        onChange={setSkill} />
-            <SkillSelect label="Managing money & budgeting"     field="budgeting"      value={form.skills.budgeting}      onChange={setSkill} />
-            <SkillSelect label="Using public transportation"    field="transit"        value={form.skills.transit}        onChange={setSkill} />
-            <SkillSelect label="Managing health & medications"  field="medication"     value={form.skills.medication}     onChange={setSkill} />
-            <SkillSelect label="Personal hygiene & self-care"   field="hygiene"        value={form.skills.hygiene}        onChange={setSkill} />
-            <SkillSelect label="Communication & social skills"  field="communication"  value={form.skills.communication}  onChange={setSkill} />
+            <p className="step-eyebrow">{t("intake.step3Eyebrow")}</p>
+            <h2 className="step-title">{t("intake.step3Title")}</h2>
+            <p className="step-sub">{t("intake.step3Sub")}</p>
+            <SkillSelect t={t} label={t("intake.skillCooking")}       field="cooking"        value={form.skills.cooking}        onChange={setSkill} />
+            <SkillSelect t={t} label={t("intake.skillBudgeting")}     field="budgeting"      value={form.skills.budgeting}      onChange={setSkill} />
+            <SkillSelect t={t} label={t("intake.skillTransit")}       field="transit"        value={form.skills.transit}        onChange={setSkill} />
+            <SkillSelect t={t} label={t("intake.skillMedication")}    field="medication"     value={form.skills.medication}     onChange={setSkill} />
+            <SkillSelect t={t} label={t("intake.skillHygiene")}       field="hygiene"        value={form.skills.hygiene}        onChange={setSkill} />
+            <SkillSelect t={t} label={t("intake.skillCommunication")} field="communication"  value={form.skills.communication}  onChange={setSkill} />
             <div className="step-actions">
-              <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
-              <button className="btn btn-primary" onClick={nextStep}>Continue →</button>
+              <button className="btn btn-secondary" onClick={prevStep}>{t("common.back")}</button>
+              <button className="btn btn-primary" onClick={nextStep}>{t("common.continue")}</button>
             </div>
           </div>
         )}
@@ -286,46 +291,46 @@ export default function IntakePage() {
         {/* ── STEP 4 ── */}
         {step === 4 && (
           <div>
-            <p className="step-eyebrow">Step 4 of 5 — Legal & Financial</p>
-            <h2 className="step-title">Planning for the future</h2>
-            <p className="step-sub">These questions help us add the right legal and financial milestones to your personalized timeline.</p>
+            <p className="step-eyebrow">{t("intake.step4Eyebrow")}</p>
+            <h2 className="step-title">{t("intake.step4Title")}</h2>
+            <p className="step-sub">{t("intake.step4Sub")}</p>
             <div className="field">
-              <label>Supported Decision-Making agreement or guardianship</label>
+              <label>{t("intake.sdmLabel")}</label>
               <select value={form.sdmInPlace} onChange={(e) => setField("sdmInPlace", e.target.value)}>
-                <option value="">Select…</option>
-                <option value="yes">Yes, it's in place</option>
-                <option value="in_progress">In progress</option>
-                <option value="no">Not yet</option>
-                <option value="unsure">Not sure</option>
+                <option value="">{t("common.select")}</option>
+                <option value="yes">{t("intake.sdmYes")}</option>
+                <option value="in_progress">{t("intake.sdmInProgress")}</option>
+                <option value="no">{t("intake.sdmNo")}</option>
+                <option value="unsure">{t("intake.sdmUnsure")}</option>
               </select>
             </div>
             <div className="field">
-              <label>Is the individual registered for ODSP?</label>
+              <label>{t("intake.odspLabel")}</label>
               <select value={form.odspRegistered} onChange={(e) => setField("odspRegistered", e.target.value)}>
-                <option value="">Select…</option>
-                <option value="yes">Yes, receiving ODSP</option>
-                <option value="applied">Applied, awaiting decision</option>
-                <option value="no">Not yet applied</option>
-                <option value="unsure">Not sure</option>
+                <option value="">{t("common.select")}</option>
+                <option value="yes">{t("intake.odspYes")}</option>
+                <option value="applied">{t("intake.odspApplied")}</option>
+                <option value="no">{t("intake.odspNo")}</option>
+                <option value="unsure">{t("intake.odspUnsure")}</option>
               </select>
             </div>
             <div className="field">
-              <label>Does the family have a Henson Trust or estate plan?</label>
+              <label>{t("intake.hensonLabel")}</label>
               <select value={form.hensonTrust} onChange={(e) => setField("hensonTrust", e.target.value)}>
-                <option value="">Select…</option>
-                <option value="yes">Yes</option>
-                <option value="in_progress">In progress</option>
-                <option value="no">No</option>
-                <option value="unsure">Not sure</option>
+                <option value="">{t("common.select")}</option>
+                <option value="yes">{t("intake.hensonYes")}</option>
+                <option value="in_progress">{t("intake.hensonInProgress")}</option>
+                <option value="no">{t("intake.hensonNo")}</option>
+                <option value="unsure">{t("intake.hensonUnsure")}</option>
               </select>
             </div>
             <div className="field">
-              <label>Any additional legal or financial notes (optional)</label>
-              <textarea placeholder="Anything else we should know..." value={form.legalNotes} onChange={(e) => setField("legalNotes", e.target.value)} />
+              <label>{t("intake.legalNotesLabel")}</label>
+              <textarea placeholder={t("intake.legalNotesPlaceholder")} value={form.legalNotes} onChange={(e) => setField("legalNotes", e.target.value)} />
             </div>
             <div className="step-actions">
-              <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
-              <button className="btn btn-primary" onClick={nextStep}>Continue →</button>
+              <button className="btn btn-secondary" onClick={prevStep}>{t("common.back")}</button>
+              <button className="btn btn-primary" onClick={nextStep}>{t("common.continue")}</button>
             </div>
           </div>
         )}
@@ -333,44 +338,44 @@ export default function IntakePage() {
         {/* ── STEP 5 ── */}
         {step === 5 && (
           <div>
-            <p className="step-eyebrow">Step 5 of 5 — Support Needs</p>
-            <h2 className="step-title">What support looks like for you</h2>
-            <p className="step-sub">This is what drives our matching algorithm — the more accurate, the better your organization matches will be.</p>
+            <p className="step-eyebrow">{t("intake.step5Eyebrow")}</p>
+            <h2 className="step-title">{t("intake.step5Title")}</h2>
+            <p className="step-sub">{t("intake.step5Sub")}</p>
             <div className="field">
-              <label>Level of daily support needed</label>
+              <label>{t("intake.supportLabel")}</label>
               <select value={form.supportLevel} onChange={(e) => setField("supportLevel", e.target.value)}>
-                <option value="">Select…</option>
-                <option value="low">Low — check-ins and reminders</option>
-                <option value="medium">Medium — some on-site daily support</option>
-                <option value="high">High — significant daily support needed</option>
+                <option value="">{t("common.select")}</option>
+                <option value="low">{t("intake.supportLow")}</option>
+                <option value="medium">{t("intake.supportMedium")}</option>
+                <option value="high">{t("intake.supportHigh")}</option>
               </select>
             </div>
             <div className="field">
-              <label>Preferred type of housing (select all that apply)</label>
+              <label>{t("intake.housingLabel")}</label>
               <div className="chip-group">
                 {HOUSING_TYPES.map((h) => (
-                  <Chip key={h} label={h} selected={form.housingPreferences.includes(h)} onToggle={() => toggleArr("housingPreferences", h)} />
+                  <Chip key={h.value} label={t(h.labelKey)} selected={form.housingPreferences.includes(h.value)} onToggle={() => toggleArr("housingPreferences", h.value)} />
                 ))}
               </div>
             </div>
             <div className="field">
-              <label>Preferred region / location</label>
+              <label>{t("intake.regionLabel")}</label>
               <select value={form.preferredRegion} onChange={(e) => setField("preferredRegion", e.target.value)}>
-                <option value="">Select…</option>
-                {REGIONS.map((r) => <option key={r}>{r}</option>)}
+                <option value="">{t("common.select")}</option>
+                {REGIONS.map((r) => <option key={r.value} value={r.value}>{t(r.labelKey)}</option>)}
               </select>
             </div>
             <div className="field">
-              <label>Anything else we should know?</label>
-              <textarea placeholder="e.g. Close to Jewish community, needs kosher meals..." value={form.additionalNotes} onChange={(e) => setField("additionalNotes", e.target.value)} />
+              <label>{t("intake.notesLabel")}</label>
+              <textarea placeholder={t("intake.notesPlaceholder")} value={form.additionalNotes} onChange={(e) => setField("additionalNotes", e.target.value)} />
             </div>
 
             {error && <div className="alert alert-danger">{error}</div>}
 
             <div className="step-actions">
-              <button className="btn btn-secondary" onClick={prevStep}>← Back</button>
+              <button className="btn btn-secondary" onClick={prevStep}>{t("common.back")}</button>
               <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
-                {saving ? "Saving…" : isEditing ? "Update My Timeline →" : "Generate My Timeline →"}
+                {saving ? t("intake.saving") : isEditing ? t("intake.update") : t("intake.generate")}
               </button>
             </div>
           </div>
