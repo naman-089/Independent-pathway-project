@@ -7,6 +7,9 @@ const STORAGE_KEY = "ipp_lang";
 export const LANGUAGES = [
   { code: "en", label: "English" },
   { code: "fr", label: "Français" },
+  { code: "zh", label: "中文" },
+  { code: "he", label: "עברית" },
+  { code: "hi", label: "हिन्दी" },
 ];
 
 function lookup(dict, key) {
@@ -19,6 +22,7 @@ export function LanguageProvider({ children }) {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, lang);
     document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "he" ? "rtl" : "ltr";
   }, [lang]);
 
   // Looks up a dotted key (e.g. "auth.welcomeBack") in the active language,
