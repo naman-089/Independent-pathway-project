@@ -49,6 +49,189 @@ function toggle(arr, val) {
   return arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val];
 }
 
+const SAMPLE_ORGS = [
+  {
+    name: "Reena",
+    shortName: "REENA",
+    description: "Person-centred day programs, life skills coaching, and community participation for adults with developmental disabilities across the GTA. Passport funding accepted.",
+    phone: "(905) 889-6484",
+    website: "https://reena.org",
+    tags: ["Day Program", "Life Skills", "Supported Housing", "Employment"],
+    housingTypes: ["Own apartment in a supported building", "Small group home", "Intentional community"],
+    regions: ["Thornhill / Vaughan", "North York", "Toronto (GTA)"],
+    supportLevel: "medium",
+    hasOpenings: true,
+    openingCount: 4,
+    pricePerDay: "85",
+    minReadiness: 20,
+  },
+  {
+    name: "Meta Centre",
+    shortName: "META",
+    description: "Community participation services and supported group living across 5 GTA locations. Specializes in adults with developmental and multiple disabilities. Passport dollars accepted.",
+    phone: "(416) 736-0199",
+    website: "https://metacentre.ca",
+    tags: ["Day Program", "Supported Housing"],
+    housingTypes: ["Small group home", "Shared home with peers"],
+    regions: ["Toronto (GTA)", "North York", "Etobicoke / Mississauga"],
+    supportLevel: "high",
+    hasOpenings: true,
+    openingCount: 6,
+    pricePerDay: "92",
+    minReadiness: 10,
+  },
+  {
+    name: "Community Living Toronto",
+    shortName: "CLT",
+    description: "Day supports, employment services, and individualized Passport programs for people with intellectual disabilities across Toronto.",
+    phone: "(416) 968-0650",
+    website: "https://cltoronto.ca",
+    tags: ["Day Program", "Employment", "Life Skills"],
+    housingTypes: ["Own apartment in a supported building"],
+    regions: ["Toronto (GTA)", "Scarborough", "North York"],
+    supportLevel: "medium",
+    hasOpenings: true,
+    openingCount: 3,
+    pricePerDay: "78",
+    minReadiness: 30,
+  },
+  {
+    name: "Kerry's Place Autism Services",
+    shortName: "KPAS",
+    description: "Ontario's largest autism service provider. Adult day supports, employment coaching, and community participation for autistic individuals and adults with developmental disabilities.",
+    phone: "(905) 841-6611",
+    website: "https://kerrysplace.org",
+    tags: ["Day Program", "Employment", "Life Skills", "Mental Health"],
+    housingTypes: [],
+    regions: ["York Region", "Durham Region", "Toronto (GTA)"],
+    supportLevel: "medium",
+    hasOpenings: true,
+    openingCount: 8,
+    pricePerDay: "95",
+    minReadiness: 20,
+  },
+  {
+    name: "Corbrook",
+    shortName: "CRBK",
+    description: "Employment training, pre-employment programs, and learning opportunities for adults and youth with developmental disabilities in Toronto and York Region.",
+    phone: "(416) 245-5565",
+    website: "https://corbrook.com",
+    tags: ["Day Program", "Employment", "Life Skills"],
+    housingTypes: [],
+    regions: ["Toronto (GTA)", "York Region"],
+    supportLevel: "low",
+    hasOpenings: false,
+    openingCount: 0,
+    pricePerDay: "65",
+    minReadiness: 40,
+  },
+  {
+    name: "L'Arche Toronto",
+    shortName: "ARCH",
+    description: "Inclusive community homes and day programs where people with and without intellectual disabilities live and work together. Arts, spirituality, and belonging at the core.",
+    phone: "(416) 881-0066",
+    website: "https://larchetoronto.org",
+    tags: ["Day Program", "Supported Housing"],
+    housingTypes: ["Intentional community", "Small group home"],
+    regions: ["Toronto (GTA)"],
+    supportLevel: "medium",
+    hasOpenings: false,
+    openingCount: 0,
+    pricePerDay: "75",
+    minReadiness: 25,
+  },
+  {
+    name: "DramaWay",
+    shortName: "DRWY",
+    description: "Arts-based day programs using theatre, music, and creative expression to build communication, confidence, and life skills for adults with disabilities. Passport eligible.",
+    phone: "(416) 978-0833",
+    website: "https://dramaway.ca",
+    tags: ["Day Program", "Life Skills", "Cultural Services"],
+    housingTypes: [],
+    regions: ["Toronto (GTA)"],
+    supportLevel: "low",
+    hasOpenings: true,
+    openingCount: 10,
+    pricePerDay: "55",
+    minReadiness: 30,
+  },
+  {
+    name: "Karis Disability Services",
+    shortName: "KARIS",
+    description: "Formerly Christian Horizons. Supported living, residential homes, and community day programs across Ontario for adults with intellectual disabilities.",
+    phone: "(519) 650-0966",
+    website: "https://karisds.ca",
+    tags: ["Supported Housing", "Day Program", "Life Skills"],
+    housingTypes: ["Small group home", "Shared home with peers", "Own apartment in a supported building"],
+    regions: ["Other Ontario", "Toronto (GTA)"],
+    supportLevel: "high",
+    hasOpenings: true,
+    openingCount: 7,
+    pricePerDay: "88",
+    minReadiness: 10,
+  },
+  {
+    name: "E3 Community Services",
+    shortName: "E3CS",
+    description: "Day programs, vocational training, and community integration for adults with developmental disabilities in the Collingwood / South Georgian Bay area.",
+    phone: "(705) 445-0120",
+    website: "https://e3communityservices.ca",
+    tags: ["Day Program", "Employment", "Life Skills"],
+    housingTypes: [],
+    regions: ["Other Ontario"],
+    supportLevel: "medium",
+    hasOpenings: true,
+    openingCount: 3,
+    pricePerDay: "68",
+    minReadiness: 20,
+  },
+  {
+    name: "LiveWorkPlay",
+    shortName: "LWP",
+    description: "Community inclusion, supported employment, and social participation helping people with intellectual disabilities live fully valued lives in Ottawa and region.",
+    phone: "(613) 792-9400",
+    website: "https://liveworkplay.ca",
+    tags: ["Day Program", "Employment", "Life Skills"],
+    housingTypes: [],
+    regions: ["Other Ontario"],
+    supportLevel: "low",
+    hasOpenings: true,
+    openingCount: 2,
+    pricePerDay: "70",
+    minReadiness: 35,
+  },
+  {
+    name: "Extend-A-Family Waterloo Region",
+    shortName: "EAFWR",
+    description: "One-to-one matching, inclusive recreation, and community participation programs connecting people with disabilities to meaningful friendships and community roles.",
+    phone: "(519) 886-9081",
+    website: "https://extend-a-family.org",
+    tags: ["Day Program", "Life Skills", "Cultural Services"],
+    housingTypes: [],
+    regions: ["Other Ontario"],
+    supportLevel: "low",
+    hasOpenings: false,
+    openingCount: 0,
+    pricePerDay: "60",
+    minReadiness: 25,
+  },
+  {
+    name: "Sunbeam Residential Development Centre",
+    shortName: "SRDC",
+    description: "Waterloo Region's day programs, employment supports, and residential services for adults with developmental disabilities. Over 70 years serving the community.",
+    phone: "(519) 743-5458",
+    website: "https://sunbeamcentre.com",
+    tags: ["Day Program", "Supported Housing", "Employment"],
+    housingTypes: ["Small group home", "Shared home with peers"],
+    regions: ["Other Ontario"],
+    supportLevel: "medium",
+    hasOpenings: true,
+    openingCount: 5,
+    pricePerDay: "72",
+    minReadiness: 15,
+  },
+];
+
 export default function ResourceDirectory() {
   const { t } = useLanguage();
   const [orgs, setOrgs]       = useState([]);
@@ -95,6 +278,20 @@ export default function ResourceDirectory() {
 
   function setF(key, val) { setForm((f) => ({ ...f, [key]: val })); }
 
+  const [prefilling, setPrefilling] = useState(false);
+  async function handlePrefill() {
+    if (!window.confirm("Add 12 sample Ontario day program organizations? Existing organizations will not be removed.")) return;
+    setPrefilling(true);
+    try {
+      for (const org of SAMPLE_ORGS) {
+        await addDoc(collection(db, "organizations"), { ...org, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      }
+      await load();
+    } finally {
+      setPrefilling(false);
+    }
+  }
+
   if (loading) return <SkeletonPage />;
 
   return (
@@ -104,7 +301,12 @@ export default function ResourceDirectory() {
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "var(--navy)" }}>{t("resourceDirectory.title")}</h1>
           <p style={{ fontSize: 14, color: "var(--text-muted)", marginTop: 4 }}>{t("resourceDirectory.subtitle", { count: orgs.length })}</p>
         </div>
-        <button className="btn btn-primary" onClick={openAdd}>{t("resourceDirectory.addOrganization")}</button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button className="btn btn-secondary" onClick={handlePrefill} disabled={prefilling}>
+            {prefilling ? "Adding…" : "⚡ Prefill Sample Data"}
+          </button>
+          <button className="btn btn-primary" onClick={openAdd}>{t("resourceDirectory.addOrganization")}</button>
+        </div>
       </div>
 
       {orgs.length === 0 && (
