@@ -13,7 +13,6 @@ const CHUNK_LOADERS = {
   "/family/timeline":  () => import("../pages/family/TimelinePage"),
   "/family/portfolio": () => import("../pages/family/PortfolioPage"),
   "/family/resources": () => import("../pages/family/ResourcesPage"),
-  "/family/waitlist":  () => import("../pages/family/WaitlistPage"),
   "/family/profile":   () => import("../pages/ProfilePage"),
 
   "/caseworker":          () => import("../pages/caseworker/CaseworkerDashboard"),
@@ -42,7 +41,6 @@ const FAMILY_LINKS = [
   { to: "/family/timeline",  labelKey: "nav.timeline"  },
   { to: "/family/portfolio", labelKey: "nav.portfolio" },
   { to: "/family/resources", labelKey: "nav.resources" },
-  { to: "/family/waitlist",  labelKey: "nav.waitlist"  },
   { to: "/family/profile",   labelKey: "nav.profile"   },
 ];
 
