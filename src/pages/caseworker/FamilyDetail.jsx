@@ -1,7 +1,7 @@
 import SkeletonPage from "../../components/Skeleton";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { doc, getDoc, collection, getDocs, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, setDoc, updateDoc, onSnapshot, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useLanguage } from "../../hooks/useLanguage";
 import { computeReadinessScore, matchOrganizations, generateTimeline, applyStatuses } from "../../utils/matching";
@@ -19,6 +19,20 @@ export default function FamilyDetail() {
   const [tab, setTab]         = useState("overview");
   const [matchNote, setMatchNote] = useState("");
   const [confirmedMatch, setConfirmedMatch] = useState(null);
+  const [waitlist, setWaitlist]   = useState(null);
+  const [cwNote, setCwNote]       = useState("");
+  const [cwNoteSaving, setCwNoteSaving] = useState(false);
+  const [cwNoteSaved, setCwNoteSaved]   = useState(false);
+
+  useEffect(() => {
+    if (!uid) return;
+    const unsub = onSnapshot(doc(db, "waitlists", uid), (snap) => {
+      const d = snap.exists() ? snap.data() : null;
+      setWaitlist(d);
+      if (d) setCwNote(d.caseworkerNotes || "");
+    });
+    return unsub;
+  }, [uid]);
 
   useEffect(() => {
     async function load() {
@@ -91,12 +105,21 @@ export default function FamilyDetail() {
     full_support: t("familyDetail.skillFullSupport"),
   };
 
-  const TABS = ["overview", "skills", "timeline", "matches"];
+  async function saveCwNote() {
+    setCwNoteSaving(true);
+    await setDoc(doc(db, "waitlists", uid), { caseworkerNotes: cwNote }, { merge: true });
+    setCwNoteSaving(false);
+    setCwNoteSaved(true);
+    setTimeout(() => setCwNoteSaved(false), 3000);
+  }
+
+  const TABS = ["overview", "skills", "timeline", "matches", "waitlist"];
   const TAB_LABELS = {
     overview: t("familyDetail.tabOverview"),
     skills:   t("familyDetail.tabSkills"),
     timeline: t("familyDetail.tabTimeline"),
     matches:  t("familyDetail.tabMatches"),
+    waitlist: t("familyDetail.tabWaitlist"),
   };
 
   const [confirmedPrefix, confirmedSuffix] = confirmedMatch
@@ -283,6 +306,72 @@ export default function FamilyDetail() {
               ))}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Waitlist Tab */}
+      {tab === "waitlist" && (
+        <div>
+          {!waitlist ? (
+            <div className="empty-state">
+              <p style={{ color: "var(--text-muted)", fontSize: 14 }}>{t("familyDetail.waitlistEmpty")}</p>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px,1fr))", gap: 16, marginBottom: 20 }}>
+              <div className="card">
+                <div className="pcard-label">{t("familyDetail.waitlistStatus")}</div>
+                <div className="pcard-value" style={{ textTransform: "capitalize" }}>
+                  {t(`waitlist.status_${waitlist.status || "not_started"}`)}
+                </div>
+                {waitlist.appliedDate && (
+                  <div className="pcard-note">{t("familyDetail.waitlistApplied")} {waitlist.appliedDate}</div>
+                )}
+                {waitlist.clientId && (
+                  <div className="pcard-note" style={{ marginTop: 4 }}>ID: {waitlist.clientId}</div>
+                )}
+              </div>
+              <div className="card">
+                <div className="pcard-label">{t("familyDetail.waitlistNeeds")}</div>
+                <div className="tag-row" style={{ marginTop: 8 }}>
+                  {(waitlist.supportNeeds || []).length === 0 && (
+                    <span style={{ fontSize: 13, color: "var(--text-muted)" }}>—</span>
+                  )}
+                  {(waitlist.supportNeeds || []).map((n) => (
+                    <span key={n} className="tag tag-teal" style={{ fontSize: 11 }}>
+                      {t(`waitlist.need_${n}`)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {waitlist.notes && (
+                <div className="card">
+                  <div className="pcard-label">{t("familyDetail.waitlistFamilyNotes")}</div>
+                  <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.7, marginTop: 4 }}>{waitlist.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="card">
+            <div className="pcard-label" style={{ marginBottom: 8 }}>{t("familyDetail.waitlistCwNotesTitle")}</div>
+            <textarea
+              className="field"
+              style={{ width: "100%", marginTop: 4 }}
+              rows={4}
+              placeholder={t("familyDetail.waitlistCwNotesPlaceholder")}
+              value={cwNote}
+              onChange={(e) => setCwNote(e.target.value)}
+            />
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
+              <button className="btn btn-primary btn-sm" onClick={saveCwNote} disabled={cwNoteSaving}>
+                {cwNoteSaving ? t("common.saving") : t("common.save")}
+              </button>
+              {cwNoteSaved && <span style={{ fontSize: 12, color: "var(--success)" }}>✓ {t("familyDetail.waitlistCwNoteSaved")}</span>}
+            </div>
+            <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>
+              {t("familyDetail.waitlistCwNotesHint")}
+            </p>
+          </div>
         </div>
       )}
 

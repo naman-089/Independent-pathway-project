@@ -16,6 +16,7 @@ const IntakePage          = lazy(() => import("./pages/family/IntakePage"));
 const TimelinePage        = lazy(() => import("./pages/family/TimelinePage"));
 const PortfolioPage       = lazy(() => import("./pages/family/PortfolioPage"));
 const ResourcesPage       = lazy(() => import("./pages/family/ResourcesPage"));
+const WaitlistPage        = lazy(() => import("./pages/family/WaitlistPage"));
 
 const CaseworkerDashboard = lazy(() => import("./pages/caseworker/CaseworkerDashboard"));
 const FamiliesList        = lazy(() => import("./pages/caseworker/FamiliesList"));
@@ -67,6 +68,7 @@ function AppShell() {
                 <Route path="timeline"    element={<TimelinePage />} />
                 <Route path="portfolio"   element={<PortfolioPage />} />
                 <Route path="resources"   element={<ResourcesPage />} />
+                <Route path="waitlist"    element={<WaitlistPage />} />
                 <Route path="profile"     element={<ProfilePage />} />
               </Routes>
             </ProtectedRoute>
