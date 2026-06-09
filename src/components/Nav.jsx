@@ -12,8 +12,9 @@ const CHUNK_LOADERS = {
   "/family/intake":    () => import("../pages/family/IntakePage"),
   "/family/timeline":  () => import("../pages/family/TimelinePage"),
   "/family/portfolio": () => import("../pages/family/PortfolioPage"),
-  "/family/resources": () => import("../pages/family/ResourcesPage"),
-  "/family/profile":   () => import("../pages/ProfilePage"),
+  "/family/resources":  () => import("../pages/family/ResourcesPage"),
+  "/family/community":  () => import("../pages/family/CommunityPage"),
+  "/family/profile":    () => import("../pages/ProfilePage"),
 
   "/caseworker":          () => import("../pages/caseworker/CaseworkerDashboard"),
   "/caseworker/families": () => import("../pages/caseworker/FamiliesList"),
@@ -40,8 +41,9 @@ const FAMILY_LINKS = [
   { to: "/family/intake",    labelKey: "nav.intake"    },
   { to: "/family/timeline",  labelKey: "nav.timeline"  },
   { to: "/family/portfolio", labelKey: "nav.portfolio" },
-  { to: "/family/resources", labelKey: "nav.resources" },
-  { to: "/family/profile",   labelKey: "nav.profile"   },
+  { to: "/family/resources",  labelKey: "nav.resources"  },
+  { to: "/family/community",  labelKey: "nav.community"  },
+  { to: "/family/profile",    labelKey: "nav.profile"    },
 ];
 
 const CASEWORKER_LINKS = [

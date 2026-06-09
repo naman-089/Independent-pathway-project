@@ -52,6 +52,8 @@ export default function ResourcesPage() {
     return matchFilter && matchSearch;
   });
 
+  const isDayProgram = filter === "Day Program";
+
   if (loading) return <SkeletonPage />;
 
   if (!intake) {
@@ -72,17 +74,24 @@ export default function ResourcesPage() {
 
   return (
     <div className="page">
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: "var(--navy)", marginBottom: 6 }}>
-          {t("resources.title")}
-        </h1>
-        <p style={{ fontSize: 14, color: "var(--text-muted)" }}>
-          {t("resources.subtitle")}
-        </p>
-      </div>
-
-      {!intake && (
-        <div className="alert alert-warn">{t("resources.completeIntakeWarn")}</div>
+      {isDayProgram ? (
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: "var(--navy)", marginBottom: 6 }}>
+            {t("resources.dayProgramsTitle")}
+          </h1>
+          <p style={{ fontSize: 14, color: "var(--text-muted)" }}>
+            {t("resources.dayProgramsSubtitle")}
+          </p>
+        </div>
+      ) : (
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: "var(--navy)", marginBottom: 6 }}>
+            {t("resources.title")}
+          </h1>
+          <p style={{ fontSize: 14, color: "var(--text-muted)" }}>
+            {t("resources.subtitle")}
+          </p>
+        </div>
       )}
 
       <div className="search-row">
@@ -113,46 +122,142 @@ export default function ResourcesPage() {
         </div>
       )}
 
-      {displayed.map((org) => (
-        <div className="resource-card" key={org.id}>
-          <div className="resource-logo">{org.shortName || org.name.split(" ").map((w) => w[0]).join("").slice(0, 4)}</div>
-          <div className="resource-info">
-            <h3>{org.name}</h3>
-            <p>{org.description}</p>
-            <div className="tag-row">
-              {org.hasOpenings && <span className="tag tag-success" style={{ fontSize: 11 }}>
-                {org.openingCount ? t("resources.openings", { count: org.openingCount, plural: org.openingCount > 1 ? "s" : "" }) : t("resources.acceptingReferrals")}
-              </span>}
-              {(org.tags || []).map((tag) => (
-                <span key={tag} className="tag tag-teal" style={{ fontSize: 11 }}>{tag}</span>
-              ))}
-              {(org.regions || []).slice(0, 2).map((r) => (
-                <span key={r} className="tag tag-navy" style={{ fontSize: 11 }}>{r}</span>
-              ))}
-            </div>
-            {org.phone && (
-              <p style={{ fontSize: 12, color: "var(--teal)", marginTop: 8 }}>
-                📞 {org.phone}
-                {org.website && <> · <a href={org.website} target="_blank" rel="noreferrer" style={{ color: "var(--teal)" }}>{t("common.website")}</a></>}
-              </p>
-            )}
-          </div>
-          <div style={{ flexShrink: 0, textAlign: "right" }}>
-            <div className="match-score">{org.matchScore}%</div>
-            <div className="match-label">{t("resources.match")}</div>
-            {org.minReadiness > 0 && (
-              <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>
-                {t("resources.minReadiness", { score: org.minReadiness })}
-              </div>
-            )}
-          </div>
+      {isDayProgram ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+          {displayed.map((org) => (
+            <MarketplaceCard key={org.id} org={org} t={t} />
+          ))}
         </div>
-      ))}
+      ) : (
+        displayed.map((org) => (
+          <div className="resource-card" key={org.id}>
+            <div className="resource-logo">{org.shortName || org.name.split(" ").map((w) => w[0]).join("").slice(0, 4)}</div>
+            <div className="resource-info">
+              <h3>{org.name}</h3>
+              <p>{org.description}</p>
+              <div className="tag-row">
+                {org.hasOpenings && (
+                  <span className="tag tag-success" style={{ fontSize: 11 }}>
+                    {org.openingCount ? t("resources.openings", { count: org.openingCount, plural: org.openingCount > 1 ? "s" : "" }) : t("resources.acceptingReferrals")}
+                  </span>
+                )}
+                {(org.tags || []).map((tag) => (
+                  <span key={tag} className="tag tag-teal" style={{ fontSize: 11 }}>{tag}</span>
+                ))}
+                {(org.regions || []).slice(0, 2).map((r) => (
+                  <span key={r} className="tag tag-navy" style={{ fontSize: 11 }}>{r}</span>
+                ))}
+              </div>
+              {org.phone && (
+                <p style={{ fontSize: 12, color: "var(--teal)", marginTop: 8 }}>
+                  📞 {org.phone}
+                  {org.website && <> · <a href={org.website} target="_blank" rel="noreferrer" style={{ color: "var(--teal)" }}>{t("common.website")}</a></>}
+                </p>
+              )}
+            </div>
+            <div style={{ flexShrink: 0, textAlign: "right" }}>
+              <div className="match-score">{org.matchScore}%</div>
+              <div className="match-label">{t("resources.match")}</div>
+              {org.minReadiness > 0 && (
+                <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>
+                  {t("resources.minReadiness", { score: org.minReadiness })}
+                </div>
+              )}
+            </div>
+          </div>
+        ))
+      )}
 
       {orgs.length === 0 && (
         <div className="alert alert-warn" style={{ marginTop: 16 }}>
           {t("resources.emptyDirectory")}
         </div>
+      )}
+    </div>
+  );
+}
+
+function MarketplaceCard({ org, t }) {
+  const initials = org.shortName || org.name.split(" ").map((w) => w[0]).join("").slice(0, 4);
+  const hasPrice = org.pricePerDay && String(org.pricePerDay).trim() !== "";
+
+  return (
+    <div
+      className="card"
+      style={{ display: "flex", flexDirection: "column", gap: 12, position: "relative", overflow: "hidden", transition: "box-shadow 0.15s" }}
+      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.1)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ""; }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            className="resource-logo"
+            style={{ width: 44, height: 44, fontSize: 11, borderRadius: 10, flexShrink: 0 }}
+          >
+            {initials}
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "var(--navy)", lineHeight: 1.3 }}>{org.name}</div>
+            {org.hasOpenings && (
+              <span className="tag tag-success" style={{ fontSize: 10, marginTop: 4, display: "inline-block" }}>
+                {org.openingCount ? t("resources.openings", { count: org.openingCount, plural: org.openingCount > 1 ? "s" : "" }) : t("resources.acceptingReferrals")}
+              </span>
+            )}
+          </div>
+        </div>
+        <div style={{ textAlign: "right", flexShrink: 0 }}>
+          <div className="match-score" style={{ fontSize: 18 }}>{org.matchScore}%</div>
+          <div className="match-label" style={{ fontSize: 10 }}>{t("resources.match")}</div>
+        </div>
+      </div>
+
+      {org.description && (
+        <p style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.55, margin: 0 }}>
+          {org.description}
+        </p>
+      )}
+
+      {hasPrice && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              background: "var(--teal)",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 700,
+              padding: "5px 12px",
+              borderRadius: 20,
+              letterSpacing: 0.3,
+            }}
+          >
+            💵 {t("resources.pricePerDay", { price: `$${org.pricePerDay}` })}
+          </span>
+          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{t("resources.passportEligible")}</span>
+        </div>
+      )}
+
+      <div className="tag-row" style={{ margin: 0 }}>
+        {(org.tags || []).map((tag) => (
+          <span key={tag} className="tag tag-teal" style={{ fontSize: 10 }}>{tag}</span>
+        ))}
+        {(org.regions || []).slice(0, 2).map((r) => (
+          <span key={r} className="tag tag-navy" style={{ fontSize: 10 }}>{r}</span>
+        ))}
+      </div>
+
+      {(org.phone || org.website) && (
+        <p style={{ fontSize: 12, color: "var(--teal)", margin: 0 }}>
+          {org.phone && <>📞 {org.phone}</>}
+          {org.phone && org.website && " · "}
+          {org.website && (
+            <a href={org.website} target="_blank" rel="noreferrer" style={{ color: "var(--teal)" }}>
+              {t("common.website")}
+            </a>
+          )}
+        </p>
       )}
     </div>
   );

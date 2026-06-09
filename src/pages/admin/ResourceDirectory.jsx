@@ -13,6 +13,7 @@ const EMPTY_ORG = {
   hasOpenings: false,
   openingCount: 0,
   minReadiness: 0,
+  pricePerDay: "",
 };
 
 // `value` is persisted to Firestore and shown raw to families on ResourcesPage/FamilyDetail;
@@ -178,6 +179,20 @@ export default function ResourceDirectory() {
               <div className="field"><label>{t("resourceDirectory.phoneLabel")}</label><input type="tel" value={form.phone} onChange={(e) => setF("phone", e.target.value)} placeholder={t("resourceDirectory.phonePlaceholder")} /></div>
               <div className="field"><label>{t("resourceDirectory.websiteLabel")}</label><input type="url" value={form.website} onChange={(e) => setF("website", e.target.value)} placeholder={t("resourceDirectory.websitePlaceholder")} /></div>
             </div>
+
+            {form.tags.includes("Day Program") && (
+              <div className="field">
+                <label>{t("resourceDirectory.pricePerDayLabel")}</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={form.pricePerDay}
+                  onChange={(e) => setF("pricePerDay", e.target.value)}
+                  placeholder={t("resourceDirectory.pricePerDayPlaceholder")}
+                />
+              </div>
+            )}
 
             <div className="field">
               <label>{t("resourceDirectory.supportLevelLabel")}</label>

@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Splash from "./components/Splash";
 import Nav from "./components/Nav";
 import SkeletonPage from "./components/Skeleton";
+import Chatbot from "./components/Chatbot";
 
 // Lazy-loaded pages — each page is its own JS chunk downloaded on first visit
 const AuthPage            = lazy(() => import("./pages/AuthPage"));
@@ -16,6 +17,7 @@ const IntakePage          = lazy(() => import("./pages/family/IntakePage"));
 const TimelinePage        = lazy(() => import("./pages/family/TimelinePage"));
 const PortfolioPage       = lazy(() => import("./pages/family/PortfolioPage"));
 const ResourcesPage       = lazy(() => import("./pages/family/ResourcesPage"));
+const CommunityPage       = lazy(() => import("./pages/family/CommunityPage"));
 
 const CaseworkerDashboard = lazy(() => import("./pages/caseworker/CaseworkerDashboard"));
 const FamiliesList        = lazy(() => import("./pages/caseworker/FamiliesList"));
@@ -67,8 +69,10 @@ function AppShell() {
                 <Route path="timeline"    element={<TimelinePage />} />
                 <Route path="portfolio"   element={<PortfolioPage />} />
                 <Route path="resources"   element={<ResourcesPage />} />
+                <Route path="community"   element={<CommunityPage />} />
                 <Route path="profile"     element={<ProfilePage />} />
               </Routes>
+              <Chatbot />
             </ProtectedRoute>
           } />
 
