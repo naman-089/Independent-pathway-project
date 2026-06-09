@@ -106,7 +106,7 @@ function PathCard({ icon, label, desc, onClick }) {
         alignItems: "center",
         gap: 16,
         padding: "18px 22px",
-        background: "var(--card)",
+        background: "var(--white)",
         border: `2px solid ${hover ? "var(--accent)" : "var(--border)"}`,
         borderRadius: 14,
         cursor: "pointer",
@@ -171,7 +171,7 @@ function TeenPath({ t, navigate }) {
             { icon: "⚖️", label: t("familyHome.docSDM") },
             { icon: "💰", label: t("familyHome.docODSP") },
           ].map(({ icon, label }) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "var(--bg)", borderRadius: 10, fontSize: 13, color: "var(--text)" }}>
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "var(--off)", borderRadius: 10, fontSize: 13, color: "var(--text)" }}>
               <span>{icon}</span>{label}
             </div>
           ))}

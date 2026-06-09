@@ -14,7 +14,7 @@ export default function LanguageSwitcher({ onLight = false }) {
           aria-pressed={lang === l.code}
           title={l.label}
         >
-          {l.code.toUpperCase()}
+          {l.short}
         </button>
       ))}
     </div>

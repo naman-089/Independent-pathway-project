@@ -592,6 +592,137 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
 @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 @keyframes spin { to { transform:rotate(360deg); } }
 
+/* ══ MULTILINGUAL / SCRIPT SUPPORT ══════════════════════════════════════════
+   Covers Chinese (zh), Hebrew (he / RTL), and Hindi (hi / Devanagari).
+   All fixes are scoped to [lang="xx"] or [dir="rtl"] so English/French are
+   completely unaffected.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Universal text overflow guard ── */
+* { overflow-wrap: break-word; }
+h1, h2, h3, h4, h5 { word-break: break-word; }
+
+/* ── Script-specific fonts ──
+   DM Sans / Syne don't cover Hebrew or Devanagari glyphs.
+   Google Fonts Noto families are loaded in index.html. */
+:lang(he) { font-family: 'Noto Sans Hebrew', 'DM Sans', system-ui, sans-serif; }
+:lang(hi) { font-family: 'Noto Sans Devanagari', 'DM Sans', system-ui, sans-serif; }
+:lang(zh) { font-family: 'Noto Sans SC', 'DM Sans', system-ui, sans-serif; }
+
+/* Syne headings don't cover non-Latin — fall back to system for h tags in those langs */
+:lang(he) h1,:lang(he) h2,:lang(he) h3,:lang(he) h4,:lang(he) h5,
+:lang(hi) h1,:lang(hi) h2,:lang(hi) h3,:lang(hi) h4,:lang(hi) h5,
+:lang(zh) h1,:lang(zh) h2,:lang(zh) h3,:lang(zh) h4,:lang(zh) h5 {
+  font-family: 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans SC', system-ui, sans-serif;
+}
+
+/* ── Letter-spacing reset for non-Latin ──
+   Letter-spacing designed for Latin glyphs looks broken on Hebrew,
+   Devanagari (Hindi), and CJK characters. */
+[dir="rtl"] .splash-eyebrow, :lang(zh) .splash-eyebrow, :lang(hi) .splash-eyebrow,
+[dir="rtl"] .hero-badge,     :lang(zh) .hero-badge,     :lang(hi) .hero-badge,
+[dir="rtl"] .nav-role-badge, :lang(zh) .nav-role-badge, :lang(hi) .nav-role-badge,
+[dir="rtl"] .step-eyebrow,   :lang(zh) .step-eyebrow,   :lang(hi) .step-eyebrow,
+[dir="rtl"] .pcard-label,    :lang(zh) .pcard-label,    :lang(hi) .pcard-label,
+[dir="rtl"] .match-label,    :lang(zh) .match-label,    :lang(hi) .match-label,
+[dir="rtl"] .phase-label,    :lang(zh) .phase-label,    :lang(hi) .phase-label,
+[dir="rtl"] .m-badge,        :lang(zh) .m-badge,        :lang(hi) .m-badge,
+[dir="rtl"] .tag,            :lang(zh) .tag,            :lang(hi) .tag { letter-spacing: 0; }
+
+/* ── Hero text — remove max-width cap so long translations wrap rather than truncate ── */
+[dir="rtl"] .hero h1, :lang(zh) .hero h1, :lang(hi) .hero h1 { max-width: 100%; }
+[dir="rtl"] .hero p,  :lang(zh) .hero p,  :lang(hi) .hero p  { max-width: 100%; }
+
+/* ── Language switcher — grow slightly to fit native-script short labels ── */
+.lang-switch-btn { min-width: 28px; text-align: center; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RTL LAYOUT — Hebrew (`[dir="rtl"]`)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Nav */
+[dir="rtl"] .nav                  { flex-direction: row-reverse; }
+[dir="rtl"] .nav-links            { flex-direction: row-reverse; }
+[dir="rtl"] .nav-role-badge       { margin-right: 0; margin-left: 8px; }
+[dir="rtl"] .nav-mobile-menu      { align-items: flex-end; }
+[dir="rtl"] .nav-mobile-menu .nav-link { text-align: right; }
+
+/* Progress bar fill — RTL reads right to left */
+[dir="rtl"] .intake-progress-fill { margin-left: auto; margin-right: 0; }
+
+/* Step indicator row */
+[dir="rtl"] .step-actions { flex-direction: row-reverse; }
+
+/* Timeline header */
+[dir="rtl"] .tl-header       { flex-direction: row-reverse; }
+[dir="rtl"] .tl-header-text  { text-align: right; }
+[dir="rtl"] .progress-ring   { margin-left: 0; margin-right: auto; text-align: left; }
+
+/* Phase section label — the decorative line is on the right in LTR, left in RTL */
+[dir="rtl"] .phase-label                { flex-direction: row-reverse; }
+[dir="rtl"] .phase-label::after         { display: none; }
+[dir="rtl"] .phase-label::before        { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.08); }
+
+/* Milestone item */
+[dir="rtl"] .milestone                  { flex-direction: row-reverse; }
+[dir="rtl"] .milestone:hover            { transform: translateX(-4px); }
+[dir="rtl"] .m-status-col              { align-items: flex-start; }
+[dir="rtl"] .m-badge                   { margin-left: 0; margin-right: auto; }
+[dir="rtl"] .m-note {
+  border-left: none;
+  border-right: 2px solid var(--accent);
+  border-radius: 4px 0 0 4px;
+  text-align: right;
+}
+
+/* Portfolio */
+[dir="rtl"] .portfolio-header  { flex-direction: row-reverse; }
+[dir="rtl"] .portfolio-info    { text-align: right; }
+[dir="rtl"] .tag-row           { flex-direction: row-reverse; }
+[dir="rtl"] .pcard-label,
+[dir="rtl"] .pcard-value,
+[dir="rtl"] .pcard-note        { text-align: right; }
+[dir="rtl"] .skill-list li     { flex-direction: row-reverse; }
+
+/* Resources */
+[dir="rtl"] .search-row        { flex-direction: row-reverse; }
+[dir="rtl"] .filter-row        { flex-direction: row-reverse; }
+[dir="rtl"] .resource-card     { flex-direction: row-reverse; }
+[dir="rtl"] .resource-info h3,
+[dir="rtl"] .resource-info p   { text-align: right; }
+[dir="rtl"] .match-score,
+[dir="rtl"] .match-label       { text-align: left; }
+
+/* Tables */
+[dir="rtl"] .data-table th     { text-align: right; }
+[dir="rtl"] .data-table td     { text-align: right; }
+
+/* Forms */
+[dir="rtl"] .field label       { text-align: right; }
+[dir="rtl"] .field input,
+[dir="rtl"] .field select,
+[dir="rtl"] .field textarea    { text-align: right; direction: rtl; }
+[dir="rtl"] .field-hint        { text-align: right; }
+[dir="rtl"] .chip-group        { justify-content: flex-end; }
+
+/* Auth */
+[dir="rtl"] .auth-title,
+[dir="rtl"] .auth-sub          { text-align: right; }
+[dir="rtl"] .role-picker       { direction: rtl; }
+
+/* Alerts & misc */
+[dir="rtl"] .alert             { flex-direction: row-reverse; text-align: right; }
+[dir="rtl"] .section-title     { flex-direction: row-reverse; }
+[dir="rtl"] .step-eyebrow,
+[dir="rtl"] .step-title,
+[dir="rtl"] .step-sub          { text-align: right; }
+
+/* Hero / splash */
+[dir="rtl"] .hero              { text-align: right; }
+[dir="rtl"] .hero-badge        { text-align: right; }
+[dir="rtl"] .splash-eyebrow,
+[dir="rtl"] .splash-sub        { text-align: right; }
+
 /* ── NAV HAMBURGER ── */
 .nav-hamburger {
   display: none;

@@ -5,11 +5,11 @@ const LanguageContext = createContext(null);
 const STORAGE_KEY = "ipp_lang";
 
 export const LANGUAGES = [
-  { code: "en", label: "English" },
-  { code: "fr", label: "Français" },
-  { code: "zh", label: "中文" },
-  { code: "he", label: "עברית" },
-  { code: "hi", label: "हिन्दी" },
+  { code: "en", label: "English",  short: "EN"  },
+  { code: "fr", label: "Français", short: "FR"  },
+  { code: "zh", label: "中文",      short: "中文" },
+  { code: "he", label: "עברית",    short: "עב"  },
+  { code: "hi", label: "हिन्दी",   short: "हि"  },
 ];
 
 function lookup(dict, key) {
