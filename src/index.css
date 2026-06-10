@@ -820,12 +820,46 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; }
   background: var(--navy); color: rgba(255,255,255,0.85);
   font-size: 0.75rem; font-weight: 600; padding: 8px 14px;
 }
-.yt-lesson-fallback {
-  padding: 20px 16px; background: var(--off);
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-  text-align: center;
+.yt-placeholder {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 60%, #16213e 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  overflow: hidden;
 }
-.yt-lesson-fallback p { font-size: 0.8125rem; color: var(--text-muted); }
+.yt-placeholder::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px,
+    transparent 1px, transparent 60px
+  ),
+  repeating-linear-gradient(
+    0deg,
+    rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px,
+    transparent 1px, transparent 60px
+  );
+}
+.yt-placeholder-play { position: relative; z-index: 1; cursor: default; }
+.yt-placeholder-label {
+  position: relative; z-index: 1;
+  font-size: 0.8125rem; color: rgba(255,255,255,0.55);
+  font-weight: 500; letter-spacing: 0.3px;
+}
+.yt-placeholder-badge {
+  position: relative; z-index: 1;
+  font-size: 0.625rem; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.45);
+  padding: 3px 10px; border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.yt-lesson-done-row {
+  padding: 10px 14px; background: var(--off);
+  display: flex; justify-content: flex-end;
+  border-top: 1px solid var(--border);
+}
 .milestone-main-row { display: flex; gap: 14px; align-items: flex-start; width: 100%; }
 
 /* ── FOOTER ── */
