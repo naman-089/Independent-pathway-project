@@ -4,9 +4,6 @@ import { useAuth } from "../hooks/useAuth";
 import { useLanguage } from "../hooks/useLanguage";
 import LanguageSwitcher from "./LanguageSwitcher";
 
-// Maps each nav route to the dynamic import behind its lazy() in App.jsx, so we
-// can warm up the JS chunk in the background — by the time the user clicks a
-// link, the page is already downloaded instead of loading on demand.
 const CHUNK_LOADERS = {
   "/family":           () => import("../pages/family/FamilyHome"),
   "/family/intake":    () => import("../pages/family/IntakePage"),
@@ -14,17 +11,14 @@ const CHUNK_LOADERS = {
   "/family/portfolio": () => import("../pages/family/PortfolioPage"),
   "/family/resources":  () => import("../pages/family/ResourcesPage"),
   "/family/community":  () => import("../pages/family/CommunityPage"),
-  "/family/profile":    () => import("../pages/ProfilePage"),
 
   "/caseworker":          () => import("../pages/caseworker/CaseworkerDashboard"),
   "/caseworker/families": () => import("../pages/caseworker/FamiliesList"),
   "/caseworker/matches":  () => import("../pages/caseworker/MatchesOverview"),
-  "/caseworker/profile":  () => import("../pages/ProfilePage"),
 
   "/admin":           () => import("../pages/admin/AdminDashboard"),
   "/admin/resources": () => import("../pages/admin/ResourceDirectory"),
   "/admin/users":     () => import("../pages/admin/UsersPage"),
-  "/admin/profile":   () => import("../pages/ProfilePage"),
 };
 
 const prefetched = new Set();
@@ -43,27 +37,30 @@ const FAMILY_LINKS = [
   { to: "/family/portfolio", labelKey: "nav.portfolio" },
   { to: "/family/resources",  labelKey: "nav.resources"  },
   { to: "/family/community",  labelKey: "nav.community"  },
-  { to: "/family/profile",    labelKey: "nav.profile"    },
 ];
 
 const CASEWORKER_LINKS = [
   { to: "/caseworker",            labelKey: "nav.dashboard" },
   { to: "/caseworker/families",   labelKey: "nav.families"  },
   { to: "/caseworker/matches",    labelKey: "nav.matches"   },
-  { to: "/caseworker/profile",    labelKey: "nav.profile"   },
 ];
 
 const ADMIN_LINKS = [
   { to: "/admin",            labelKey: "nav.dashboard" },
   { to: "/admin/resources",  labelKey: "nav.directory" },
   { to: "/admin/users",      labelKey: "nav.users"     },
-  { to: "/admin/profile",    labelKey: "nav.profile"   },
+];
+
+const ZOOM_LEVELS = [
+  { level: 1, label: "A",  title: "Normal text size"  },
+  { level: 2, label: "A",  title: "Large text size"   },
+  { level: 3, label: "A",  title: "Largest text size" },
 ];
 
 export default function Nav() {
   const { profile, logout } = useAuth();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t, zoom, setZoom } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const links =
@@ -75,8 +72,6 @@ export default function Nav() {
     profile?.role === "caseworker" ? t("nav.roleCaseworker") :
     profile?.role === "admin"      ? t("nav.roleAdmin") : t("nav.roleFamily");
 
-  // Warm up the other pages' chunks once the dashboard is idle, so navigating
-  // between sections feels instant instead of waiting on a fresh download.
   useEffect(() => {
     const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
     const cancel = window.cancelIdleCallback || clearTimeout;
@@ -114,6 +109,19 @@ export default function Nav() {
             </Link>
           ))}
           <button className="nav-link danger" onClick={logout}>{t("nav.signOut")}</button>
+          <div className="font-zoom-group" role="group" aria-label="Text size">
+            {ZOOM_LEVELS.map(({ level, label, title }) => (
+              <button
+                key={level}
+                className={`font-zoom-btn${zoom === level ? " active" : ""}`}
+                onClick={() => setZoom(level)}
+                title={title}
+                aria-pressed={zoom === level}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <LanguageSwitcher />
         </div>
       </nav>
@@ -136,6 +144,18 @@ export default function Nav() {
           <button className="nav-link danger" onClick={() => { logout(); close(); }} role="menuitem">
             {t("nav.signOut")}
           </button>
+          <div className="font-zoom-group" style={{ marginTop: 4 }}>
+            {ZOOM_LEVELS.map(({ level, label, title }) => (
+              <button
+                key={level}
+                className={`font-zoom-btn${zoom === level ? " active" : ""}`}
+                onClick={() => setZoom(level)}
+                title={title}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <LanguageSwitcher />
         </div>
       )}

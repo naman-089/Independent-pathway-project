@@ -5,10 +5,10 @@ import { LanguageProvider } from "./hooks/useLanguage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Splash from "./components/Splash";
 import Nav from "./components/Nav";
+import Footer from "./components/Footer";
 import SkeletonPage from "./components/Skeleton";
 import Chatbot from "./components/Chatbot";
 
-// Lazy-loaded pages — each page is its own JS chunk downloaded on first visit
 const AuthPage            = lazy(() => import("./pages/AuthPage"));
 const ProfilePage         = lazy(() => import("./pages/ProfilePage"));
 
@@ -33,10 +33,6 @@ function AppShell() {
 
   useEffect(() => {
     if (splashDone) return;
-    // Match the splash background behind it and warm up the auth chunk while it
-    // plays, so the handoff is instant — the auth form (and its password field)
-    // only mounts once the splash is gone, instead of sitting hidden underneath
-    // it where mobile browsers can prematurely trigger the keyboard/autofill.
     document.body.classList.add("splash-active");
     import("./pages/AuthPage");
     return () => document.body.classList.remove("splash-active");
@@ -72,6 +68,7 @@ function AppShell() {
                 <Route path="community"   element={<CommunityPage />} />
                 <Route path="profile"     element={<ProfilePage />} />
               </Routes>
+              <Footer />
               <Chatbot />
             </ProtectedRoute>
           } />
@@ -87,6 +84,7 @@ function AppShell() {
                 <Route path="matches"       element={<MatchesOverview />} />
                 <Route path="profile"       element={<ProfilePage />} />
               </Routes>
+              <Footer />
             </ProtectedRoute>
           } />
 
@@ -100,6 +98,7 @@ function AppShell() {
                 <Route path="users"      element={<UsersPage />} />
                 <Route path="profile"    element={<ProfilePage />} />
               </Routes>
+              <Footer />
             </ProtectedRoute>
           } />
 

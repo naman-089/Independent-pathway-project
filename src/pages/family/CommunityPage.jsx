@@ -1,28 +1,68 @@
 import { useState, useEffect, useRef } from "react";
-import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, limit } from "firebase/firestore";
+import {
+  collection, addDoc, onSnapshot, orderBy,
+  query, serverTimestamp, limit,
+} from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
 import { useLanguage } from "../../hooks/useLanguage";
 
+function getConversationId(uid1, uid2) {
+  return [uid1, uid2].sort().join("_");
+}
+
 export default function CommunityPage() {
   const { user, profile } = useAuth();
   const { t } = useLanguage();
-  const [messages, setMessages] = useState([]);
-  const [text, setText] = useState("");
-  const [sending, setSending] = useState(false);
+
+  // activeChannel: "community" | uid-of-DM-partner
+  const [activeChannel, setActiveChannel]   = useState("community");
+  const [messages, setMessages]             = useState([]);
+  const [communityUsers, setCommunityUsers] = useState([]);
+  const [text, setText]                     = useState("");
+  const [sending, setSending]               = useState(false);
+  const [sidebarOpen, setSidebarOpen]       = useState(false);
   const bottomRef = useRef(null);
 
+  // Derive the Firestore collection ref for the active channel
+  function colRef() {
+    if (activeChannel === "community") {
+      return collection(db, "communityMessages");
+    }
+    const convId = getConversationId(user.uid, activeChannel);
+    return collection(db, "dms", convId, "messages");
+  }
+
+  // Subscribe to messages in the active channel
+  useEffect(() => {
+    const q = query(colRef(), orderBy("createdAt", "asc"), limit(100));
+    const unsub = onSnapshot(q, (snap) => {
+      setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
+    return unsub;
+  }, [activeChannel]);
+
+  // Track unique users from community messages for the DM sidebar list
   useEffect(() => {
     const q = query(
       collection(db, "communityMessages"),
-      orderBy("createdAt", "asc"),
-      limit(100)
+      orderBy("createdAt", "desc"),
+      limit(60)
     );
-    return onSnapshot(q, (snap) => {
-      setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    const unsub = onSnapshot(q, (snap) => {
+      const seen = {};
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        if (data.uid && data.uid !== user.uid) {
+          seen[data.uid] = data.displayName || "Family";
+        }
+      });
+      setCommunityUsers(Object.entries(seen).map(([uid, displayName]) => ({ uid, displayName })));
     });
-  }, []);
+    return unsub;
+  }, [user.uid]);
 
+  // Auto-scroll to latest message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -32,7 +72,7 @@ export default function CommunityPage() {
     if (!trimmed || sending) return;
     setSending(true);
     try {
-      await addDoc(collection(db, "communityMessages"), {
+      await addDoc(colRef(), {
         text: trimmed,
         uid: user.uid,
         displayName: profile?.displayName || user.email?.split("@")[0] || "Family",
@@ -45,86 +85,150 @@ export default function CommunityPage() {
   }
 
   function handleKey(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      send();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   }
 
-  return (
-    <div className="page" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 80px)", paddingBottom: 0 }}>
-      <div style={{ marginBottom: 20, flexShrink: 0 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: "var(--navy)" }}>{t("community.title")}</h1>
-        <p style={{ fontSize: 14, color: "var(--text-muted)", marginTop: 4 }}>{t("community.subtitle")}</p>
-      </div>
+  function selectChannel(ch) {
+    setActiveChannel(ch);
+    setSidebarOpen(false);
+  }
 
-      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10, paddingBottom: 8 }}>
-        {messages.length === 0 && (
-          <div className="empty-state">
-            <p>{t("community.empty")}</p>
+  const activeName = activeChannel === "community"
+    ? t("community.communityChannel")
+    : communityUsers.find((u) => u.uid === activeChannel)?.displayName || "Chat";
+
+  const activeIsChannel = activeChannel === "community";
+
+  return (
+    <div className="community-layout">
+      {/* ── Sidebar ── */}
+      <div className={`community-sidebar${sidebarOpen ? " mobile-open" : ""}`}>
+        <div className="community-sidebar-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontWeight: 800, fontSize: "0.9375rem", color: "var(--navy)", fontFamily: "'Nunito', sans-serif" }}>
+            {t("community.title")}
+          </span>
+          <button
+            className="pencil-btn"
+            onClick={() => setSidebarOpen(false)}
+            style={{ display: "none" }}
+            aria-label="Close sidebar"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="community-sidebar-section">
+          <div className="community-sidebar-label">{t("community.channels")}</div>
+          <button
+            className={`community-channel-btn${activeChannel === "community" ? " active" : ""}`}
+            onClick={() => selectChannel("community")}
+          >
+            <div className="channel-icon">#</div>
+            <div>
+              <div className="channel-name">{t("community.communityChannel")}</div>
+              <div className="channel-sub">{t("community.subtitle")}</div>
+            </div>
+          </button>
+        </div>
+
+        {communityUsers.length > 0 && (
+          <div className="community-sidebar-section">
+            <div className="community-sidebar-label">{t("community.directMessages")}</div>
+            {communityUsers.map((u) => (
+              <button
+                key={u.uid}
+                className={`community-channel-btn${activeChannel === u.uid ? " active" : ""}`}
+                onClick={() => selectChannel(u.uid)}
+              >
+                <div className="dm-avatar">{u.displayName?.charAt(0).toUpperCase() || "?"}</div>
+                <div>
+                  <div className="channel-name">{u.displayName}</div>
+                  <div className="channel-sub">Direct message</div>
+                </div>
+              </button>
+            ))}
           </div>
         )}
-        {messages.map((msg) => {
-          const isMe = msg.uid === user.uid;
-          return (
-            <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start" }}>
-              {!isMe && (
-                <span style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 3, marginLeft: 6 }}>
-                  {msg.displayName}
-                </span>
-              )}
-              <div
-                style={{
-                  maxWidth: "72%",
-                  padding: "10px 14px",
-                  borderRadius: isMe ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                  background: isMe ? "var(--accent)" : "var(--card)",
-                  color: isMe ? "#fff" : "var(--text)",
-                  fontSize: 14,
-                  lineHeight: 1.55,
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
-                  border: isMe ? "none" : "1px solid var(--border)",
-                  wordBreak: "break-word",
-                }}
-              >
-                {msg.text}
-              </div>
-              {msg.createdAt && (
-                <span
-                  style={{
-                    fontSize: 10,
-                    color: "var(--text-muted)",
-                    marginTop: 3,
-                    [isMe ? "marginRight" : "marginLeft"]: 6,
-                  }}
-                >
-                  {msg.createdAt.toDate?.()?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              )}
-            </div>
-          );
-        })}
-        <div ref={bottomRef} />
       </div>
 
-      <div style={{ display: "flex", gap: 10, paddingTop: 12, borderTop: "1px solid var(--border)", flexShrink: 0, paddingBottom: 16 }}>
-        <textarea
-          className="field"
-          style={{ flex: 1, resize: "none", minHeight: 44, maxHeight: 120, lineHeight: 1.5, padding: "10px 14px", margin: 0 }}
-          placeholder={t("community.inputPlaceholder")}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKey}
-          rows={1}
-        />
-        <button
-          className="btn btn-primary"
-          onClick={send}
-          disabled={sending || !text.trim()}
-          style={{ flexShrink: 0, alignSelf: "flex-end", height: 44 }}
-        >
-          {sending ? "…" : t("community.send")}
-        </button>
+      {/* ── Main chat area ── */}
+      <div className="community-main">
+        {/* Header */}
+        <div className="community-chat-header">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              className="pencil-btn"
+              style={{ display: "none" }}
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open conversations"
+            >
+              ☰
+            </button>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "0.9375rem", color: "var(--navy)", fontFamily: "'Nunito', sans-serif" }}>
+                {activeIsChannel ? `# ${activeName}` : `@ ${activeName}`}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                {activeIsChannel ? t("community.subtitle") : "Private message"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="community-messages">
+          {messages.length === 0 && (
+            <div className="empty-state">
+              <p style={{ fontSize: "0.9375rem" }}>{t("community.empty")}</p>
+            </div>
+          )}
+          {messages.map((msg) => {
+            const isMe = msg.uid === user.uid;
+            return (
+              <div key={msg.id} className={`msg-row ${isMe ? "msg-me" : "msg-other"}`}>
+                {!isMe && (
+                  <div className="msg-avatar">
+                    {msg.displayName?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+                )}
+                <div className="msg-content">
+                  {!isMe && (
+                    <div className="msg-sender">{msg.displayName}</div>
+                  )}
+                  <div className={`msg-bubble ${isMe ? "bubble-me" : "bubble-other"}`}>
+                    {msg.text}
+                  </div>
+                  {msg.createdAt && (
+                    <div className={`msg-time ${isMe ? "time-me" : "time-other"}`}>
+                      {msg.createdAt.toDate?.()?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* Input */}
+        <div className="community-input-row">
+          <textarea
+            className="community-input"
+            placeholder={t("community.inputPlaceholder")}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKey}
+            rows={1}
+          />
+          <button
+            className="btn btn-primary"
+            onClick={send}
+            disabled={sending || !text.trim()}
+            style={{ flexShrink: 0, alignSelf: "flex-end", height: 44 }}
+          >
+            {sending ? "…" : t("community.send")}
+          </button>
+        </div>
       </div>
     </div>
   );

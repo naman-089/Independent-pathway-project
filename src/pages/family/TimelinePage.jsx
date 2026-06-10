@@ -7,6 +7,9 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../hooks/useLanguage";
 import { generateTimeline, computeReadinessScore, applyStatuses } from "../../utils/matching";
 
+// Update this URL to the actual Reena courses page when available
+const COURSES_IFRAME_URL = "https://www.reena.org/programs/";
+
 async function persistStatuses(uid, updated) {
   const flat = {};
   updated.forEach((phase) =>
@@ -32,8 +35,7 @@ export default function TimelinePage() {
   const [timeline, setTimeline] = useState([]);
   const [loading, setLoading]   = useState(true);
 
-  // Reflection modal
-  const [modal, setModal]             = useState(null); // { pi, ii, item }
+  const [modal, setModal]             = useState(null);
   const [reflectDate, setReflectDate] = useState("");
   const [reflectNote, setReflectNote] = useState("");
   const [saving, setSaving]           = useState(false);
@@ -52,18 +54,16 @@ export default function TimelinePage() {
 
   function handleMilestoneClick(pi, ii) {
     const item = timeline[pi].items[ii];
-    if (item.locked) return;     // auto-verified from intake data
-    if (item.status === "done") return; // completed milestones are final — can't be undone
+    if (item.locked) return;
+    if (item.status === "done") return;
 
     if (item.status === "active") {
-      // Require reflection before marking Done
       setModal({ pi, ii, item });
       setReflectDate(new Date().toISOString().split("T")[0]);
       setReflectNote("");
       return;
     }
 
-    // pending → active
     const updated = timeline.map((phase, p) => ({
       ...phase,
       items: phase.items.map((itm, i) =>
@@ -102,10 +102,18 @@ export default function TimelinePage() {
   const doneItems  = timeline.reduce((s, p) => s + p.items.filter((i) => i.status === "done").length, 0);
   const pct = totalItems ? Math.round((doneItems / totalItems) * 100) : 0;
 
+  // Per-phase completion for the progress dots
+  const phaseStats = timeline.map((phase) => {
+    const total = phase.items.length;
+    const done  = phase.items.filter((i) => i.status === "done").length;
+    return { total, done, pct: total ? Math.round((done / total) * 100) : 0 };
+  });
+
   const [instrPrefix, instrSuffix] = t("timeline.instructions", { auto: "{{auto}}" }).split("{{auto}}");
 
   return (
     <div className="page">
+      {/* Header card */}
       <div className="tl-header">
         <div className="tl-avatar">{initial}</div>
         <div className="tl-header-text">
@@ -118,19 +126,42 @@ export default function TimelinePage() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 24, display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
+      {/* Visual progress bar */}
+      <div className="tl-progress-wrap">
+        <div className="tl-progress-label">
+          <span>{t("timeline.progressLine", { done: doneItems, total: totalItems })}</span>
+          <strong>{pct}% {t("timeline.complete")}</strong>
+        </div>
+        <div className="tl-progress-track">
+          <div className="tl-progress-fill" style={{ width: `${pct}%` }} />
+        </div>
+        <div className="tl-phase-dots">
+          {timeline.map((phase, idx) => {
+            const stat = phaseStats[idx];
+            const isDone = stat.pct === 100;
+            const isPartial = stat.done > 0 && !isDone;
+            return (
+              <div key={phase.phaseKey} className="tl-phase-dot">
+                <div className={`tl-phase-dot-circle${isDone ? " done" : isPartial ? " partial" : ""}`} />
+                <span>{`P${idx + 1}`}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Readiness card */}
+      <div className="card" style={{ marginBottom: 20, display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
         <div>
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>{t("timeline.readinessScore")}</p>
+          <p style={{ fontSize: "0.6875rem", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>
+            {t("timeline.readinessScore")}
+          </p>
           <div className="score-ring">{readiness}<span>{t("timeline.of100")}</span></div>
         </div>
         <div className="divider" style={{ width: 1, height: 48, margin: 0 }} />
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
-            {readiness >= 75
-              ? t("timeline.msgHigh")
-              : readiness >= 50
-              ? t("timeline.msgMid")
-              : t("timeline.msgLow")}
+          <p style={{ fontSize: "0.8125rem", color: "var(--text-muted)", lineHeight: 1.65 }}>
+            {readiness >= 75 ? t("timeline.msgHigh") : readiness >= 50 ? t("timeline.msgMid") : t("timeline.msgLow")}
           </p>
         </div>
         <button className="btn btn-secondary btn-sm" onClick={() => navigate("/family/resources")}>
@@ -138,10 +169,11 @@ export default function TimelinePage() {
         </button>
       </div>
 
-      <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20 }}>
+      <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: 20 }}>
         {instrPrefix}<strong>{t("timeline.autoBadge")}</strong>{instrSuffix}
       </p>
 
+      {/* Timeline phases */}
       {timeline.map((phase, pi) => (
         <div className="phase-section" key={phase.phaseKey}>
           <div className="phase-label">{phase.phase}</div>
@@ -161,7 +193,7 @@ export default function TimelinePage() {
                 {item.note && (
                   <div className="m-note">
                     {item.completedDate && (
-                      <span style={{ fontWeight: 600 }}>
+                      <span style={{ fontWeight: 700 }}>
                         {new Date(item.completedDate + "T00:00:00").toLocaleDateString("en-CA", {
                           month: "short", day: "numeric", year: "numeric",
                         })}{" · "}
@@ -180,6 +212,25 @@ export default function TimelinePage() {
               </div>
             </div>
           ))}
+
+          {/* Phase 2 — embedded courses iframe */}
+          {pi === 1 && (
+            <div className="phase-courses-wrap">
+              <div className="phase-courses-header">
+                <div>
+                  <h4>{t("timeline.coursesTitle")}</h4>
+                  <p>{t("timeline.coursesSubtitle")}</p>
+                </div>
+              </div>
+              <iframe
+                className="phase-courses-iframe"
+                src={COURSES_IFRAME_URL}
+                title="Reena Phase 2 Courses"
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              />
+            </div>
+          )}
         </div>
       ))}
 
