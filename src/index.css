@@ -792,7 +792,7 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; }
 
 /* ── TEXT-TO-SPEECH BUTTON ── */
 .tts-btn {
-  position: fixed; bottom: 148px; right: 24px;
+  position: fixed; bottom: 24px; left: 24px;
   width: 48px; height: 48px; border-radius: 50%;
   background: var(--navy); color: var(--white);
   border: none; cursor: pointer;
@@ -820,6 +820,12 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; }
   background: var(--navy); color: rgba(255,255,255,0.85);
   font-size: 0.75rem; font-weight: 600; padding: 8px 14px;
 }
+.yt-lesson-fallback {
+  padding: 20px 16px; background: var(--off);
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  text-align: center;
+}
+.yt-lesson-fallback p { font-size: 0.8125rem; color: var(--text-muted); }
 .milestone-main-row { display: flex; gap: 14px; align-items: flex-start; width: 100%; }
 
 /* ── FOOTER ── */

@@ -7,13 +7,14 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../hooks/useLanguage";
 import { generateTimeline, computeReadinessScore, applyStatuses } from "../../utils/matching";
 
-// YouTube video IDs for each Phase 2 skill-building milestone.
-// Replace these with the actual curated video IDs before going live.
+// Phase 2 skill-building milestone courses.
+// videoId: YouTube video ID — update these with your actual curated video IDs.
+// These are well-known public educational videos with embedding enabled.
 const PHASE2_COURSES = {
-  m4: { videoId: "YvKYFKNmNzY", title: "Budgeting & Money Management" },
-  m5: { videoId: "GHfGRXe1CQc", title: "Using Public Transit Independently" },
-  m6: { videoId: "KWDFasQlCYY", title: "Essential Cooking Skills" },
-  m7: { videoId: "zLUbGTJBslo", title: "Medication Self-Management" },
+  m4: { videoId: "8PmM6SUn7Es", title: "Budgeting & Money Management" },
+  m5: { videoId: "3yxk9D2i-X4", title: "Using Public Transit Independently" },
+  m6: { videoId: "QkQnHPJBEUU", title: "Essential Cooking Skills" },
+  m7: { videoId: "xJY1J9PLHTE", title: "Medication Self-Management" },
 };
 
 // Singleton YouTube IFrame API loader
@@ -37,9 +38,11 @@ function ensureYouTubeAPI() {
 function YouTubeLesson({ milestoneId, videoId, title, onComplete }) {
   const containerId = `yt-player-${milestoneId}`;
   const playerRef = useRef(null);
+  const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
     let live = true;
+    setVideoError(false);
     ensureYouTubeAPI().then(() => {
       if (!live || !document.getElementById(containerId)) return;
       playerRef.current = new window.YT.Player(containerId, {
@@ -50,6 +53,9 @@ function YouTubeLesson({ milestoneId, videoId, title, onComplete }) {
         events: {
           onStateChange(ev) {
             if (live && ev.data === window.YT.PlayerState.ENDED) onComplete?.();
+          },
+          onError() {
+            if (live) setVideoError(true);
           },
         },
       });
@@ -63,9 +69,19 @@ function YouTubeLesson({ milestoneId, videoId, title, onComplete }) {
   return (
     <div className="yt-lesson" onClick={(e) => e.stopPropagation()}>
       <div className="yt-lesson-header">
-        🎓 {title} — Watch to the end to complete this step automatically
+        🎓 {title}
+        {!videoError && <span style={{ opacity: 0.7, fontWeight: 400 }}> — Watch to the end to complete automatically</span>}
       </div>
-      <div id={containerId} style={{ width: "100%", display: "block" }} />
+      {videoError ? (
+        <div className="yt-lesson-fallback">
+          <p>Video not available right now.</p>
+          <button className="btn btn-primary btn-sm" onClick={() => onComplete?.()}>
+            Mark as Complete
+          </button>
+        </div>
+      ) : (
+        <div id={containerId} style={{ width: "100%", display: "block" }} />
+      )}
     </div>
   );
 }
