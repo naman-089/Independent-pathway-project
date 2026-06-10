@@ -6,6 +6,7 @@ import { useLanguage } from "../../hooks/useLanguage";
 import { useNavigate } from "react-router-dom";
 import { computeReadinessScore } from "../../utils/matching";
 import SkeletonPage from "../../components/Skeleton";
+import { IconPencil } from "@tabler/icons-react";
 
 const SKILL_PCT = {
   independent:  100,
@@ -107,15 +108,15 @@ export default function PortfolioPage() {
               </>
             ) : (
               <>
-                <h2 style={{ marginBottom: 0 }}>{name}</h2>
                 <button
                   className="pencil-btn"
                   onClick={startEdit}
                   title={t("portfolio.editName")}
                   aria-label={t("portfolio.editName")}
                 >
-                  ✏️
+                  <IconPencil size={16} />
                 </button>
+                <h2 style={{ marginBottom: 0 }}>{name}</h2>
               </>
             )}
           </div>

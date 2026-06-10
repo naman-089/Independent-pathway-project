@@ -1,5 +1,5 @@
 import SkeletonPage from "../../components/Skeleton";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
@@ -7,8 +7,68 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../hooks/useLanguage";
 import { generateTimeline, computeReadinessScore, applyStatuses } from "../../utils/matching";
 
-// Update this URL to the actual Reena courses page when available
-const COURSES_IFRAME_URL = "https://www.reena.org/programs/";
+// YouTube video IDs for each Phase 2 skill-building milestone.
+// Replace these with the actual curated video IDs before going live.
+const PHASE2_COURSES = {
+  m4: { videoId: "YvKYFKNmNzY", title: "Budgeting & Money Management" },
+  m5: { videoId: "GHfGRXe1CQc", title: "Using Public Transit Independently" },
+  m6: { videoId: "KWDFasQlCYY", title: "Essential Cooking Skills" },
+  m7: { videoId: "zLUbGTJBslo", title: "Medication Self-Management" },
+};
+
+// Singleton YouTube IFrame API loader
+let _ytReadyPromise = null;
+function ensureYouTubeAPI() {
+  if (_ytReadyPromise) return _ytReadyPromise;
+  if (window.YT?.Player) return (_ytReadyPromise = Promise.resolve());
+  _ytReadyPromise = new Promise((resolve) => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { prev?.(); resolve(); };
+    if (!document.getElementById("yt-iframe-api")) {
+      const s = document.createElement("script");
+      s.id = "yt-iframe-api";
+      s.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(s);
+    }
+  });
+  return _ytReadyPromise;
+}
+
+function YouTubeLesson({ milestoneId, videoId, title, onComplete }) {
+  const containerId = `yt-player-${milestoneId}`;
+  const playerRef = useRef(null);
+
+  useEffect(() => {
+    let live = true;
+    ensureYouTubeAPI().then(() => {
+      if (!live || !document.getElementById(containerId)) return;
+      playerRef.current = new window.YT.Player(containerId, {
+        videoId,
+        width: "100%",
+        height: "260",
+        playerVars: { rel: 0, modestbranding: 1, origin: window.location.origin },
+        events: {
+          onStateChange(ev) {
+            if (live && ev.data === window.YT.PlayerState.ENDED) onComplete?.();
+          },
+        },
+      });
+    });
+    return () => {
+      live = false;
+      try { playerRef.current?.destroy(); } catch (_) {}
+    };
+  }, [videoId, milestoneId]);
+
+  return (
+    <div className="yt-lesson" onClick={(e) => e.stopPropagation()}>
+      <div className="yt-lesson-header">
+        🎓 {title} — Watch to the end to complete this step automatically
+      </div>
+      <div id={containerId} style={{ width: "100%", display: "block" }} />
+    </div>
+  );
+}
 
 async function persistStatuses(uid, updated) {
   const flat = {};
@@ -58,6 +118,8 @@ export default function TimelinePage() {
     if (item.status === "done") return;
 
     if (item.status === "active") {
+      // Phase 2 skill milestones with a video: clicking again does nothing — video completion triggers auto-done
+      if (PHASE2_COURSES[item.id]) return;
       setModal({ pi, ii, item });
       setReflectDate(new Date().toISOString().split("T")[0]);
       setReflectNote("");
@@ -72,6 +134,20 @@ export default function TimelinePage() {
     }));
     setTimeline(updated);
     persistStatuses(user.uid, updated);
+  }
+
+  async function autoCompleteMilestone(pi, ii, courseTitle) {
+    const today = new Date().toISOString().split("T")[0];
+    const updated = timeline.map((phase, p) => ({
+      ...phase,
+      items: phase.items.map((itm, i) =>
+        p === pi && i === ii
+          ? { ...itm, status: "done", completedDate: today, note: `Course completed: ${courseTitle}` }
+          : itm
+      ),
+    }));
+    setTimeline(updated);
+    await persistStatuses(user.uid, updated);
   }
 
   async function submitReflection() {
@@ -177,60 +253,55 @@ export default function TimelinePage() {
       {timeline.map((phase, pi) => (
         <div className="phase-section" key={phase.phaseKey}>
           <div className="phase-label">{phase.phase}</div>
-          {phase.items.map((item, ii) => (
-            <div
-              key={item.id}
-              className={`milestone${item.locked ? " milestone-locked" : ""}`}
-              onClick={() => handleMilestoneClick(pi, ii)}
-              style={{ cursor: (item.locked || item.status === "done") ? "default" : "pointer" }}
-            >
-              <div className={`m-dot ${item.status}`}>
-                {item.status === "done" ? "✓" : item.status === "active" ? "→" : ii + 1}
-              </div>
-              <div className="m-info">
-                <h4>{item.title}</h4>
-                <p>{item.desc}</p>
-                {item.note && (
-                  <div className="m-note">
-                    {item.completedDate && (
-                      <span style={{ fontWeight: 700 }}>
-                        {new Date(item.completedDate + "T00:00:00").toLocaleDateString("en-CA", {
-                          month: "short", day: "numeric", year: "numeric",
-                        })}{" · "}
-                      </span>
-                    )}
-                    {item.note}
+          {phase.items.map((item, ii) => {
+            const course = PHASE2_COURSES[item.id];
+            const showVideo = !!course && item.status === "active";
+            return (
+              <div
+                key={item.id}
+                className={`milestone${item.locked ? " milestone-locked" : ""}`}
+                onClick={() => handleMilestoneClick(pi, ii)}
+                style={{ cursor: (item.locked || item.status === "done" || showVideo) ? "default" : "pointer", flexDirection: "column" }}
+              >
+                <div className="milestone-main-row">
+                  <div className={`m-dot ${item.status}`}>
+                    {item.status === "done" ? "✓" : item.status === "active" ? "→" : ii + 1}
                   </div>
+                  <div className="m-info">
+                    <h4>{item.title}</h4>
+                    <p>{item.desc}</p>
+                    {item.note && (
+                      <div className="m-note">
+                        {item.completedDate && (
+                          <span style={{ fontWeight: 700 }}>
+                            {new Date(item.completedDate + "T00:00:00").toLocaleDateString("en-CA", {
+                              month: "short", day: "numeric", year: "numeric",
+                            })}{" · "}
+                          </span>
+                        )}
+                        {item.note}
+                      </div>
+                    )}
+                  </div>
+                  <div className="m-status-col">
+                    <div className={`m-badge ${item.status}`}>
+                      {item.status === "done" ? t("timeline.statusDone") : item.status === "active" ? t("timeline.statusActive") : t("timeline.statusPending")}
+                    </div>
+                    {item.auto && <span className="m-auto-badge">{t("timeline.autoBadge")}</span>}
+                    {item.caseworkerVerified && <span className="m-verified-badge">{t("timeline.caseworkerVerified")}</span>}
+                  </div>
+                </div>
+                {showVideo && (
+                  <YouTubeLesson
+                    milestoneId={item.id}
+                    videoId={course.videoId}
+                    title={course.title}
+                    onComplete={() => autoCompleteMilestone(pi, ii, course.title)}
+                  />
                 )}
               </div>
-              <div className="m-status-col">
-                <div className={`m-badge ${item.status}`}>
-                  {item.status === "done" ? t("timeline.statusDone") : item.status === "active" ? t("timeline.statusActive") : t("timeline.statusPending")}
-                </div>
-                {item.auto && <span className="m-auto-badge">{t("timeline.autoBadge")}</span>}
-                {item.caseworkerVerified && <span className="m-verified-badge">{t("timeline.caseworkerVerified")}</span>}
-              </div>
-            </div>
-          ))}
-
-          {/* Phase 2 — embedded courses iframe */}
-          {pi === 1 && (
-            <div className="phase-courses-wrap">
-              <div className="phase-courses-header">
-                <div>
-                  <h4>{t("timeline.coursesTitle")}</h4>
-                  <p>{t("timeline.coursesSubtitle")}</p>
-                </div>
-              </div>
-              <iframe
-                className="phase-courses-iframe"
-                src={COURSES_IFRAME_URL}
-                title="Reena Phase 2 Courses"
-                loading="lazy"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-              />
-            </div>
-          )}
+            );
+          })}
         </div>
       ))}
 

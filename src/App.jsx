@@ -8,6 +8,7 @@ import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import SkeletonPage from "./components/Skeleton";
 import Chatbot from "./components/Chatbot";
+import TextToSpeech from "./components/TextToSpeech";
 
 const AuthPage            = lazy(() => import("./pages/AuthPage"));
 const ProfilePage         = lazy(() => import("./pages/ProfilePage"));
@@ -70,6 +71,7 @@ function AppShell() {
               </Routes>
               <Footer />
               <Chatbot />
+              <TextToSpeech />
             </ProtectedRoute>
           } />
 
@@ -85,6 +87,7 @@ function AppShell() {
                 <Route path="profile"       element={<ProfilePage />} />
               </Routes>
               <Footer />
+              <TextToSpeech />
             </ProtectedRoute>
           } />
 
@@ -99,6 +102,7 @@ function AppShell() {
                 <Route path="profile"    element={<ProfilePage />} />
               </Routes>
               <Footer />
+              <TextToSpeech />
             </ProtectedRoute>
           } />
 

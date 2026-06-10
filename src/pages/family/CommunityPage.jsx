@@ -22,7 +22,7 @@ export default function CommunityPage() {
   const [text, setText]                     = useState("");
   const [sending, setSending]               = useState(false);
   const [sidebarOpen, setSidebarOpen]       = useState(false);
-  const bottomRef = useRef(null);
+  const messagesRef = useRef(null);
 
   // Derive the Firestore collection ref for the active channel
   function colRef() {
@@ -62,9 +62,10 @@ export default function CommunityPage() {
     return unsub;
   }, [user.uid]);
 
-  // Auto-scroll to latest message
+  // Auto-scroll to latest message within the messages container only
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = messagesRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   async function send() {
@@ -176,7 +177,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Messages */}
-        <div className="community-messages">
+        <div className="community-messages" ref={messagesRef}>
           {messages.length === 0 && (
             <div className="empty-state">
               <p style={{ fontSize: "0.9375rem" }}>{t("community.empty")}</p>
@@ -207,7 +208,6 @@ export default function CommunityPage() {
               </div>
             );
           })}
-          <div ref={bottomRef} />
         </div>
 
         {/* Input */}
