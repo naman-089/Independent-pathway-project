@@ -181,7 +181,7 @@ export default function IntakePage() {
         uid:         user.uid,
         submittedAt: serverTimestamp(),
         status:      "submitted",
-      });
+      }, { merge: true });
       await setDoc(doc(db, "users", user.uid), { intakeComplete: true }, { merge: true });
       navigate("/family/timeline");
     } catch (err) {
