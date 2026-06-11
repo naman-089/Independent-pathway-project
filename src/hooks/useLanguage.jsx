@@ -26,6 +26,23 @@ export function LanguageProvider({ children }) {
     localStorage.setItem(STORAGE_KEY, lang);
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === "he" ? "rtl" : "ltr";
+
+    // Load Noto script fonts on demand — only when the user actually picks that language
+    const NOTO_FONTS = {
+      he: "Noto+Sans+Hebrew:wght@400;700",
+      hi: "Noto+Sans+Devanagari:wght@400;700",
+      zh: "Noto+Sans+SC:wght@400;700",
+    };
+    if (NOTO_FONTS[lang]) {
+      const id = `noto-font-${lang}`;
+      if (!document.getElementById(id)) {
+        const link = document.createElement("link");
+        link.id = id;
+        link.rel = "stylesheet";
+        link.href = `https://fonts.googleapis.com/css2?family=${NOTO_FONTS[lang]}&display=swap`;
+        document.head.appendChild(link);
+      }
+    }
   }, [lang]);
 
   useEffect(() => {

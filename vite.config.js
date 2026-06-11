@@ -61,8 +61,11 @@ export default defineConfig({
         // Split large, slow-changing vendor libs into their own chunks so
         // browsers can cache and parallel-fetch them independently of app code.
         manualChunks: {
-          react: ["react", "react-dom", "react-router-dom"],
-          firebase: ["firebase/app", "firebase/auth", "firebase/firestore"],
+          react:     ["react", "react-dom", "react-router-dom"],
+          "fb-app":  ["firebase/app"],
+          "fb-auth": ["firebase/auth"],
+          "fb-db":   ["firebase/firestore"],
+          icons:     ["@tabler/icons-react"],
         },
       },
     },
