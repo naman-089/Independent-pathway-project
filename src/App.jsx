@@ -1,4 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { LanguageProvider } from "./hooks/useLanguage";
@@ -120,6 +122,8 @@ export default function App() {
         <BrowserRouter>
           <AppShell />
         </BrowserRouter>
+        <Analytics />
+        <SpeedInsights />
       </AuthProvider>
     </LanguageProvider>
   );
