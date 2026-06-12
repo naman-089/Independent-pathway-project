@@ -789,6 +789,12 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; }
   line-height: 1.5; transition: border-color 0.2s;
 }
 .community-input:focus { border-color: var(--accent); background: var(--white); }
+.community-moderation-notice {
+  padding: 7px 16px; background: #f0f4ff;
+  color: #5b6fad; font-size: 0.75rem;
+  border-bottom: 1px solid #d9e2ff;
+  flex-shrink: 0;
+}
 .community-blocked-msg {
   padding: 8px 16px; background: var(--danger-pale);
   color: var(--danger); font-size: 0.8125rem; font-weight: 500;

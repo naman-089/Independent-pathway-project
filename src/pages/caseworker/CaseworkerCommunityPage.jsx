@@ -149,6 +149,11 @@ export default function CaseworkerCommunityPage() {
           </div>
         </div>
 
+        {/* Moderation notice */}
+        <div className="community-moderation-notice">
+          🤖 Messages are reviewed by AI to keep this space safe and respectful.
+        </div>
+
         <div className="community-messages" ref={messagesRef}>
           {!activeFamily && (
             <div className="empty-state">
