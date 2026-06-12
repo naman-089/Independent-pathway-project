@@ -22,10 +22,11 @@ const PortfolioPage       = lazy(() => import("./pages/family/PortfolioPage"));
 const ResourcesPage       = lazy(() => import("./pages/family/ResourcesPage"));
 const CommunityPage       = lazy(() => import("./pages/family/CommunityPage"));
 
-const CaseworkerDashboard = lazy(() => import("./pages/caseworker/CaseworkerDashboard"));
-const FamiliesList        = lazy(() => import("./pages/caseworker/FamiliesList"));
-const FamilyDetail        = lazy(() => import("./pages/caseworker/FamilyDetail"));
-const MatchesOverview     = lazy(() => import("./pages/caseworker/MatchesOverview"));
+const CaseworkerDashboard      = lazy(() => import("./pages/caseworker/CaseworkerDashboard"));
+const FamiliesList             = lazy(() => import("./pages/caseworker/FamiliesList"));
+const FamilyDetail             = lazy(() => import("./pages/caseworker/FamilyDetail"));
+const MatchesOverview          = lazy(() => import("./pages/caseworker/MatchesOverview"));
+const CaseworkerCommunityPage  = lazy(() => import("./pages/caseworker/CaseworkerCommunityPage"));
 
 const AdminDashboard      = lazy(() => import("./pages/admin/AdminDashboard"));
 const ResourceDirectory   = lazy(() => import("./pages/admin/ResourceDirectory"));
@@ -86,7 +87,7 @@ function AppShell() {
                 <Route path="families"      element={<FamiliesList />} />
                 <Route path="families/:uid" element={<FamilyDetail />} />
                 <Route path="matches"       element={<MatchesOverview />} />
-                <Route path="community"     element={<CommunityPage />} />
+                <Route path="community"     element={<CaseworkerCommunityPage />} />
                 <Route path="profile"       element={<ProfilePage />} />
               </Routes>
               <Footer />

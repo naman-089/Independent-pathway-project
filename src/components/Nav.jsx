@@ -15,7 +15,7 @@ const CHUNK_LOADERS = {
   "/caseworker":             () => import("../pages/caseworker/CaseworkerDashboard"),
   "/caseworker/families":    () => import("../pages/caseworker/FamiliesList"),
   "/caseworker/matches":     () => import("../pages/caseworker/MatchesOverview"),
-  "/caseworker/community":   () => import("../pages/family/CommunityPage"),
+  "/caseworker/community":   () => import("../pages/caseworker/CaseworkerCommunityPage"),
 
   "/admin":           () => import("../pages/admin/AdminDashboard"),
   "/admin/resources": () => import("../pages/admin/ResourceDirectory"),
