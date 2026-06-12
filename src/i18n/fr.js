@@ -345,6 +345,12 @@ export const fr = {
     m14Desc: "Premiers 30 jours avec suivis quotidiens du personnel de Reena",
     m15Title: "Bilan de stabilisation à 90 jours",
     m15Desc: "Bilan complet avec la famille, l'intervenant et la personne",
+    m16Title: "Demander le crédit d'impôt pour personnes handicapées",
+    m16Desc: "Remplissez le formulaire T2201 pour l'ARC — débloque l'admissibilité au REEI et réduit l'impôt. Prend 2 à 4 mois, commencez tôt",
+    m17Title: "Demander le financement Passeport",
+    m17Desc: "Faites une demande auprès de votre OSD pour 5 000 $–35 000 $/an pour les programmes de jour, le soutien à l'emploi et les activités communautaires",
+    m18Title: "Explorer la tutelle",
+    m18Desc: "Si la MPD seule ne suffit pas, demandez une tutelle judiciaire auprès du Bureau du tuteur et curateur public (BTCP)",
 
     autoNoteIntake: "Évaluation d'admission soumise",
     autoNoteHenson: "Confirmé dans l'admission : Fiducie Henson en place",
@@ -434,9 +440,16 @@ export const fr = {
   community: {
     title: "Clavardage communautaire",
     subtitle: "Connectez-vous avec d'autres familles qui vivent la même expérience.",
+    communityChannel: "Toutes les familles",
+    caseworkerChannel: "Intervenant",
+    directMessages: "Messages directs",
+    channels: "Canaux",
     empty: "Pas encore de messages — soyez le premier à démarrer une conversation!",
     inputPlaceholder: "Partagez une expérience ou posez une question…",
     send: "Envoyer",
+    newMessage: "Nouveau message",
+    familyNetwork: "Réseau familial",
+    moderationNotice: "🤖 Les messages sont examinés par l'IA pour maintenir un espace sûr et respectueux.",
   },
 
   chatbot: {

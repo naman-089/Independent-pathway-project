@@ -453,6 +453,7 @@ export const en = {
     send: "Send",
     newMessage: "New Message",
     familyNetwork: "Family Network",
+    moderationNotice: "🤖 Messages are reviewed by AI to keep this space safe and respectful.",
   },
 
   chatbot: {
