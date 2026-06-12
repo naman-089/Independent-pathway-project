@@ -7,6 +7,29 @@ function localApiPlugin() {
   return {
     name: "local-api",
     configureServer(server) {
+      server.middlewares.use("/api/moderate", async (req, res) => {
+        if (req.method !== "POST") {
+          res.writeHead(405).end(); return;
+        }
+        let body = "";
+        req.on("data", (chunk) => { body += chunk; });
+        req.on("end", async () => {
+          try {
+            const mod = await import("./api/moderate.js");
+            await mod.default(
+              { method: "POST", body },
+              {
+                status: (code) => ({ json: (d) => { res.writeHead(code, { "content-type": "application/json" }); res.end(JSON.stringify(d)); } }),
+                json: (d) => { res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify(d)); },
+              }
+            );
+          } catch {
+            res.writeHead(200, { "content-type": "application/json" });
+            res.end(JSON.stringify({ flagged: false }));
+          }
+        });
+      });
+
       server.middlewares.use("/api/chat", async (req, res) => {
         if (req.method !== "POST") {
           res.writeHead(405).end(JSON.stringify({ error: "Method not allowed" }));

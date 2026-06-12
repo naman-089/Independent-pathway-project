@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import {
   collection, addDoc, onSnapshot, orderBy,
-  query, serverTimestamp, limit,
+  query, serverTimestamp, limit, getDocs, where,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
 import { useLanguage } from "../../hooks/useLanguage";
+import { checkMessage } from "../../utils/moderate";
 
 function getConversationId(uid1, uid2) {
   return [uid1, uid2].sort().join("_");
@@ -19,8 +20,10 @@ export default function CommunityPage() {
   const [activeChannel, setActiveChannel]   = useState("community");
   const [messages, setMessages]             = useState([]);
   const [communityUsers, setCommunityUsers] = useState([]);
+  const [caseworkers, setCaseworkers]       = useState([]);
   const [text, setText]                     = useState("");
   const [sending, setSending]               = useState(false);
+  const [blocked, setBlocked]               = useState(false);
   const [sidebarOpen, setSidebarOpen]       = useState(false);
   const messagesRef = useRef(null);
 
@@ -41,6 +44,18 @@ export default function CommunityPage() {
     });
     return unsub;
   }, [activeChannel]);
+
+  // Load caseworkers so families can always DM them
+  useEffect(() => {
+    getDocs(query(collection(db, "users"), where("role", "==", "caseworker")))
+      .then((snap) =>
+        setCaseworkers(snap.docs.map((d) => ({
+          uid:         d.id,
+          displayName: d.data().displayName || "Caseworker",
+        })))
+      )
+      .catch(() => {});
+  }, []);
 
   // Track unique users from community messages for the DM sidebar list
   useEffect(() => {
@@ -72,7 +87,10 @@ export default function CommunityPage() {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
     setSending(true);
+    setBlocked(false);
     try {
+      const flagged = await checkMessage(trimmed);
+      if (flagged) { setBlocked(true); return; }
       await addDoc(colRef(), {
         text: trimmed,
         uid: user.uid,
@@ -132,10 +150,29 @@ export default function CommunityPage() {
           </button>
         </div>
 
-        {communityUsers.length > 0 && (
+        {caseworkers.length > 0 && (
+          <div className="community-sidebar-section">
+            <div className="community-sidebar-label">Your Caseworkers</div>
+            {caseworkers.map((cw) => (
+              <button
+                key={cw.uid}
+                className={`community-channel-btn${activeChannel === cw.uid ? " active" : ""}`}
+                onClick={() => selectChannel(cw.uid)}
+              >
+                <div className="dm-avatar">{cw.displayName.charAt(0).toUpperCase()}</div>
+                <div>
+                  <div className="channel-name">{cw.displayName}</div>
+                  <div className="channel-sub">Caseworker</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {communityUsers.filter((u) => !caseworkers.some((cw) => cw.uid === u.uid)).length > 0 && (
           <div className="community-sidebar-section">
             <div className="community-sidebar-label">{t("community.directMessages")}</div>
-            {communityUsers.map((u) => (
+            {communityUsers.filter((u) => !caseworkers.some((cw) => cw.uid === u.uid)).map((u) => (
               <button
                 key={u.uid}
                 className={`community-channel-btn${activeChannel === u.uid ? " active" : ""}`}
@@ -210,13 +247,20 @@ export default function CommunityPage() {
           })}
         </div>
 
+        {/* Moderation warning */}
+        {blocked && (
+          <div className="community-blocked-msg">
+            ⚠️ Your message was flagged and not sent. Please keep conversations respectful.
+          </div>
+        )}
+
         {/* Input */}
         <div className="community-input-row">
           <textarea
             className="community-input"
             placeholder={t("community.inputPlaceholder")}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => { setText(e.target.value); setBlocked(false); }}
             onKeyDown={handleKey}
             rows={1}
           />

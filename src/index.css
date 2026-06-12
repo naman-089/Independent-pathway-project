@@ -789,6 +789,11 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; }
   line-height: 1.5; transition: border-color 0.2s;
 }
 .community-input:focus { border-color: var(--accent); background: var(--white); }
+.community-blocked-msg {
+  padding: 8px 16px; background: var(--danger-pale);
+  color: var(--danger); font-size: 0.8125rem; font-weight: 500;
+  border-top: 1px solid rgba(220,38,38,0.15);
+}
 
 /* ── TEXT-TO-SPEECH BUTTON ── */
 .tts-btn {

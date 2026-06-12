@@ -6,6 +6,7 @@ import {
 import { db } from "../../firebase";
 import { useAuth } from "../../hooks/useAuth";
 import { useLanguage } from "../../hooks/useLanguage";
+import { checkMessage } from "../../utils/moderate";
 
 function getConversationId(uid1, uid2) {
   return [uid1, uid2].sort().join("_");
@@ -20,6 +21,7 @@ export default function CaseworkerCommunityPage() {
   const [messages, setMessages]       = useState([]);
   const [text, setText]               = useState("");
   const [sending, setSending]         = useState(false);
+  const [blocked, setBlocked]         = useState(false);
   const [loading, setLoading]         = useState(true);
   const messagesRef                   = useRef(null);
 
@@ -66,7 +68,10 @@ export default function CaseworkerCommunityPage() {
     const trimmed = text.trim();
     if (!trimmed || sending || !activeFamily) return;
     setSending(true);
+    setBlocked(false);
     try {
+      const flagged = await checkMessage(trimmed);
+      if (flagged) { setBlocked(true); return; }
       const convId = getConversationId(user.uid, activeFamily.uid);
       await addDoc(collection(db, "dms", convId, "messages"), {
         text:        trimmed,
@@ -180,12 +185,18 @@ export default function CaseworkerCommunityPage() {
           })}
         </div>
 
+        {blocked && (
+          <div className="community-blocked-msg">
+            ⚠️ Your message was flagged and not sent. Please keep conversations respectful.
+          </div>
+        )}
+
         <div className="community-input-row">
           <textarea
             className="community-input"
             placeholder={activeFamily ? `Message ${displayName}…` : "Select a family first"}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => { setText(e.target.value); setBlocked(false); }}
             onKeyDown={handleKey}
             rows={1}
             disabled={!activeFamily}

@@ -83,8 +83,9 @@ export function generateTimeline(intake, t) {
       phaseKey: 1,
       items: [
         { id: "m1", title: t("timeline.m1Title"), desc: t("timeline.m1Desc"), alwaysInclude: true },
-        { id: "m2", title: t("timeline.m2Title"), desc: t("timeline.m2Desc"), alwaysInclude: true },
-        { id: "m3", title: t("timeline.m3Title"), desc: t("timeline.m3Desc"), alwaysInclude: true },
+        { id: "m2",  title: t("timeline.m2Title"),  desc: t("timeline.m2Desc"),  alwaysInclude: true },
+        { id: "m16", title: t("timeline.m16Title"), desc: t("timeline.m16Desc"), alwaysInclude: true },
+        { id: "m3",  title: t("timeline.m3Title"),  desc: t("timeline.m3Desc"),  alwaysInclude: true },
       ],
     },
     {
@@ -96,8 +97,10 @@ export function generateTimeline(intake, t) {
         { id: "m6", title: t("timeline.m6Title"), desc: t("timeline.m6Desc"), include: !intake.skills?.cooking || intake.skills.cooking !== "independent" },
         { id: "m7", title: t("timeline.m7Title"), desc: t("timeline.m7Desc"), include: intake.skills?.medication !== "independent" },
         { id: "m8", title: t("timeline.m8Title"), desc: t("timeline.m8Desc"), alwaysInclude: true },
-        { id: "m9", title: t("timeline.m9Title"), desc: t("timeline.m9Desc"), include: !intake.legalReady },
+        { id: "m9",  title: t("timeline.m9Title"),  desc: t("timeline.m9Desc"),  include: !intake.legalReady },
+        { id: "m18", title: t("timeline.m18Title"), desc: t("timeline.m18Desc"), include: intake.sdmInPlace !== "yes" },
         { id: "m10", title: t("timeline.m10Title"), desc: t("timeline.m10Desc"), include: !intake.odspRegistered },
+        { id: "m17", title: t("timeline.m17Title"), desc: t("timeline.m17Desc"), alwaysInclude: true },
       ],
     },
     {
