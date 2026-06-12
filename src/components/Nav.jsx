@@ -12,9 +12,10 @@ const CHUNK_LOADERS = {
   "/family/resources":  () => import("../pages/family/ResourcesPage"),
   "/family/community":  () => import("../pages/family/CommunityPage"),
 
-  "/caseworker":          () => import("../pages/caseworker/CaseworkerDashboard"),
-  "/caseworker/families": () => import("../pages/caseworker/FamiliesList"),
-  "/caseworker/matches":  () => import("../pages/caseworker/MatchesOverview"),
+  "/caseworker":             () => import("../pages/caseworker/CaseworkerDashboard"),
+  "/caseworker/families":    () => import("../pages/caseworker/FamiliesList"),
+  "/caseworker/matches":     () => import("../pages/caseworker/MatchesOverview"),
+  "/caseworker/community":   () => import("../pages/family/CommunityPage"),
 
   "/admin":           () => import("../pages/admin/AdminDashboard"),
   "/admin/resources": () => import("../pages/admin/ResourceDirectory"),
@@ -40,9 +41,10 @@ const FAMILY_LINKS = [
 ];
 
 const CASEWORKER_LINKS = [
-  { to: "/caseworker",            labelKey: "nav.dashboard" },
-  { to: "/caseworker/families",   labelKey: "nav.families"  },
-  { to: "/caseworker/matches",    labelKey: "nav.matches"   },
+  { to: "/caseworker",             labelKey: "nav.dashboard" },
+  { to: "/caseworker/families",    labelKey: "nav.families"  },
+  { to: "/caseworker/matches",     labelKey: "nav.matches"   },
+  { to: "/caseworker/community",   labelKey: "nav.community" },
 ];
 
 const ADMIN_LINKS = [

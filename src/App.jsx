@@ -86,9 +86,11 @@ function AppShell() {
                 <Route path="families"      element={<FamiliesList />} />
                 <Route path="families/:uid" element={<FamilyDetail />} />
                 <Route path="matches"       element={<MatchesOverview />} />
+                <Route path="community"     element={<CommunityPage />} />
                 <Route path="profile"       element={<ProfilePage />} />
               </Routes>
               <Footer />
+              <Chatbot />
               <TextToSpeech />
             </ProtectedRoute>
           } />
