@@ -24,7 +24,8 @@ service cloud.firestore {
     // provisioned by an admin (never via the sign-up form with a code).
     // Owners cannot escalate their own role; only admins can change roles.
     match /users/{uid} {
-      allow read:   if isOwner(uid) || isStaff();
+      // Families can read staff profiles (for DM discovery) but not other family profiles.
+      allow read:   if isOwner(uid) || isStaff() || resource.data.role in ["caseworker", "admin"];
       allow create: if isOwner(uid) && request.resource.data.role == "family";
       allow update: if (isOwner(uid) && request.resource.data.role == resource.data.role) || isAdmin();
       allow delete: if isAdmin() && request.auth.uid != uid;
