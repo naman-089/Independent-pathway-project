@@ -438,6 +438,8 @@ export const ru = {
     newMessage: "Новое сообщение",
     familyNetwork: "Сеть семей",
     moderationNotice: "🤖 Сообщения проверяются ИИ для поддержания безопасного и уважительного пространства.",
+    yourCaseworkers: "Ваши социальные работники",
+    privateMessage: "Личное сообщение",
   },
 
   chatbot: {

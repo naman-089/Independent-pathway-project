@@ -32,6 +32,26 @@ If asked about ANYTHING else (weather, recipes, sports, news, coding, general tr
 
 Keep responses warm, concise (2–5 sentences), and practical. Use plain language — many families are new to this system.`;
 
+async function verifyFirebaseToken(token) {
+  const key = process.env.FIREBASE_API_KEY;
+  if (!key) return null;
+  try {
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(key)}`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ idToken: token }),
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.users?.[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -39,6 +59,12 @@ export default async function handler(req, res) {
 
   if (process.env.AI_CHATBOT_ENABLED !== "true") {
     return res.status(503).json({ error: "Chatbot is disabled" });
+  }
+
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!token || !(await verifyFirebaseToken(token))) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   const { messages } = req.body || {};

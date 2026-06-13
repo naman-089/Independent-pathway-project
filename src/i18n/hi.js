@@ -438,6 +438,8 @@ export const hi = {
     newMessage: "नया संदेश",
     familyNetwork: "परिवार नेटवर्क",
     moderationNotice: "🤖 संदेशों की AI द्वारा समीक्षा की जाती है ताकि यह स्थान सुरक्षित और सम्मानजनक बना रहे।",
+    yourCaseworkers: "आपके केस वर्कर",
+    privateMessage: "निजी संदेश",
   },
 
   chatbot: {

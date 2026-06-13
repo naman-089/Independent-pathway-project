@@ -438,6 +438,8 @@ export const zh = {
     newMessage: "新消息",
     familyNetwork: "家庭网络",
     moderationNotice: "🤖 消息由AI审核，以保持此空间安全和友善。",
+    yourCaseworkers: "您的个案工作者",
+    privateMessage: "私信",
   },
 
   chatbot: {

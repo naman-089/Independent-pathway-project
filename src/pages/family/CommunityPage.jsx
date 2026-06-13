@@ -151,7 +151,7 @@ export default function CommunityPage() {
 
         {caseworkers.length > 0 && (
           <div className="community-sidebar-section">
-            <div className="community-sidebar-label">Your Caseworkers</div>
+            <div className="community-sidebar-label">{t("community.yourCaseworkers")}</div>
             {caseworkers.map((cw) => (
               <button
                 key={cw.uid}
@@ -161,7 +161,7 @@ export default function CommunityPage() {
                 <div className="dm-avatar">{cw.displayName.charAt(0).toUpperCase()}</div>
                 <div>
                   <div className="channel-name">{cw.displayName}</div>
-                  <div className="channel-sub">Caseworker</div>
+                  <div className="channel-sub">{t("community.caseworkerChannel")}</div>
                 </div>
               </button>
             ))}
@@ -180,7 +180,7 @@ export default function CommunityPage() {
                 <div className="dm-avatar">{u.displayName?.charAt(0).toUpperCase() || "?"}</div>
                 <div>
                   <div className="channel-name">{u.displayName}</div>
-                  <div className="channel-sub">Direct message</div>
+                  <div className="channel-sub">{t("community.privateMessage")}</div>
                 </div>
               </button>
             ))}
@@ -205,7 +205,7 @@ export default function CommunityPage() {
                 {activeIsChannel ? `# ${activeName}` : `@ ${activeName}`}
               </div>
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                {activeIsChannel ? t("community.subtitle") : "Private message"}
+                {activeIsChannel ? t("community.subtitle") : t("community.privateMessage")}
               </div>
             </div>
           </div>

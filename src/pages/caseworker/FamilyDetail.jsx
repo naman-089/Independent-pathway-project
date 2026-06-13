@@ -61,14 +61,15 @@ export default function FamilyDetail() {
   }
 
   async function setMilestoneVerified(itemId, verified) {
-    const currentStatuses = intake.milestoneStatuses || {};
-    const raw = currentStatuses[itemId];
+    const raw = (intake.milestoneStatuses || {})[itemId];
     const cur = raw ? (typeof raw === "string" ? { status: raw } : raw) : { status: "pending" };
     const next = { ...cur, caseworkerVerified: verified };
 
-    const newStatuses = { ...currentStatuses, [itemId]: next };
-    await updateDoc(doc(db, "intakes", uid), { milestoneStatuses: newStatuses });
-    setIntake((prev) => ({ ...prev, milestoneStatuses: newStatuses }));
+    await updateDoc(doc(db, "intakes", uid), { [`milestoneStatuses.${itemId}`]: next });
+    setIntake((prev) => ({
+      ...prev,
+      milestoneStatuses: { ...(prev.milestoneStatuses || {}), [itemId]: next },
+    }));
     setTimeline((prev) =>
       prev.map((phase) => ({
         ...phase,

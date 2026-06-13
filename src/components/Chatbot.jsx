@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { auth } from "../firebase";
 import { useLanguage } from "../hooks/useLanguage";
 
 const ENABLED = import.meta.env.VITE_AI_CHATBOT_ENABLED === "true";
@@ -41,9 +42,13 @@ export default function Chatbot() {
       const apiMessages = next
         .filter((m, i) => !(i === 0 && m.role === "assistant"))
         .map((m) => ({ role: m.role, content: m.content }));
+      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ messages: apiMessages }),
       });
       const data = await res.json();

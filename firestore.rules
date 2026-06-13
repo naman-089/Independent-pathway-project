@@ -19,31 +19,26 @@ service cloud.firestore {
     function isStaff()      { return isCaseworker() || isAdmin(); }
 
     // ── Users ──────────────────────────────────────────────────────────────
-    // Families read/write their own doc.
-    // Staff can read all users.
-    // Admins can also delete any user doc (used by the delete user feature).
+    // Families read/write their own doc. Staff can read all users.
+    // Self-signup is locked to role="family" — staff accounts must be
+    // provisioned by an admin (never via the sign-up form with a code).
+    // Owners cannot escalate their own role; only admins can change roles.
     match /users/{uid} {
-      allow read:   if isSignedIn(); // any signed-in user can read profiles (needed for DM discovery)
-      allow create: if isOwner(uid);
-      allow update: if isOwner(uid) || isAdmin();
-      allow delete: if isAdmin() && request.auth.uid != uid; // can't delete yourself
+      allow read:   if isOwner(uid) || isStaff();
+      allow create: if isOwner(uid) && request.resource.data.role == "family";
+      allow update: if (isOwner(uid) && request.resource.data.role == resource.data.role) || isAdmin();
+      allow delete: if isAdmin() && request.auth.uid != uid;
     }
 
     // ── Intakes ────────────────────────────────────────────────────────────
-    // Families read/write their own intake.
-    // Staff can read all intakes.
-    // Admins can delete any intake (cleanup when deleting a user).
     match /intakes/{uid} {
       allow read:   if isOwner(uid) || isStaff();
       allow create: if isOwner(uid);
-      allow update: if isOwner(uid) || isStaff(); // caseworkers can update milestone verifications
+      allow update: if isOwner(uid) || isStaff();
       allow delete: if isOwner(uid) || isAdmin();
     }
 
     // ── Matches ────────────────────────────────────────────────────────────
-    // Families read their own match.
-    // Caseworkers/admins read & write all matches.
-    // Admins can delete matches (cleanup when deleting a user).
     match /matches/{uid} {
       allow read:   if isOwner(uid) || isStaff();
       allow write:  if isStaff();
@@ -51,24 +46,32 @@ service cloud.firestore {
     }
 
     // ── Organizations ──────────────────────────────────────────────────────
-    // Any signed-in user can read; only admins can create/update/delete.
     match /organizations/{orgId} {
       allow read:  if isSignedIn();
       allow write: if isAdmin();
     }
 
     // ── Community channel ──────────────────────────────────────────────────
-    // Any signed-in user can read and post to the shared community channel.
+    // Enforce that the stored uid matches the caller and cap message size.
+    // Messages are immutable once posted; only admins can delete.
     match /communityMessages/{msgId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 2000;
+      allow update: if false;
+      allow delete: if isAdmin();
     }
 
     // ── Direct messages ────────────────────────────────────────────────────
-    // Any signed-in user can read/write DMs. The conversation ID is a
-    // sorted pair of UIDs joined by "_", so only two people share each thread.
-    // We allow any authenticated user here since the IDs are unguessable UUIDs.
+    // Conversation ID is "<uid_a>_<uid_b>" (UIDs sorted lexicographically).
+    // Only the two participants may read or write their thread.
     match /dms/{conversationId}/messages/{messageId} {
-      allow read, write: if isSignedIn();
+      allow read, write: if isSignedIn() && (
+        conversationId.matches('^' + request.auth.uid + '_.+$') ||
+        conversationId.matches('^.+_' + request.auth.uid + '$')
+      );
     }
   }
 }

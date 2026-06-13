@@ -450,6 +450,8 @@ export const he = {
     newMessage: "הודעה חדשה",
     familyNetwork: "רשת משפחתית",
     moderationNotice: "🤖 הודעות נבדקות על ידי בינה מלאכותית כדי לשמור על מרחב בטוח ומכבד.",
+    yourCaseworkers: "העובדים הסוציאליים שלך",
+    privateMessage: "הודעה פרטית",
   },
 
   chatbot: {

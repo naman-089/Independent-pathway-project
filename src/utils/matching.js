@@ -16,9 +16,13 @@ export function computeReadinessScore(intake) {
   const levels = { independent: 4, reminders: 3, some_help: 2, full_support: 1 };
 
   const fields = ["cooking", "budgeting", "transit", "medication", "hygiene", "communication"];
-  const total = fields.reduce((sum, f) => sum + (levels[skills[f]] || 1), 0);
-  const max = fields.length * 4;
-  return Math.round((total / max) * 100);
+  let total = 0, answered = 0;
+  for (const f of fields) {
+    const score = levels[skills[f]];
+    if (score !== undefined) { total += score; answered++; }
+  }
+  if (answered === 0) return 0;
+  return Math.round((total / (answered * 4)) * 100);
 }
 
 export function matchOrganizations(intake, organizations) {
@@ -97,9 +101,9 @@ export function generateTimeline(intake, t) {
         { id: "m6", title: t("timeline.m6Title"), desc: t("timeline.m6Desc"), include: !intake.skills?.cooking || intake.skills.cooking !== "independent" },
         { id: "m7", title: t("timeline.m7Title"), desc: t("timeline.m7Desc"), include: intake.skills?.medication !== "independent" },
         { id: "m8", title: t("timeline.m8Title"), desc: t("timeline.m8Desc"), alwaysInclude: true },
-        { id: "m9",  title: t("timeline.m9Title"),  desc: t("timeline.m9Desc"),  include: !intake.legalReady },
+        { id: "m9",  title: t("timeline.m9Title"),  desc: t("timeline.m9Desc"),  include: intake.sdmInPlace !== "yes" },
         { id: "m18", title: t("timeline.m18Title"), desc: t("timeline.m18Desc"), include: intake.sdmInPlace !== "yes" },
-        { id: "m10", title: t("timeline.m10Title"), desc: t("timeline.m10Desc"), include: !intake.odspRegistered },
+        { id: "m10", title: t("timeline.m10Title"), desc: t("timeline.m10Desc"), include: intake.odspRegistered !== "yes" },
         { id: "m17", title: t("timeline.m17Title"), desc: t("timeline.m17Desc"), alwaysInclude: true },
       ],
     },

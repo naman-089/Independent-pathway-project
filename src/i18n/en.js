@@ -454,6 +454,8 @@ export const en = {
     newMessage: "New Message",
     familyNetwork: "Family Network",
     moderationNotice: "🤖 Messages are reviewed by AI to keep this space safe and respectful.",
+    yourCaseworkers: "Your Caseworkers",
+    privateMessage: "Private message",
   },
 
   chatbot: {

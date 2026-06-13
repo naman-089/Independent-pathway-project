@@ -450,6 +450,8 @@ export const fr = {
     newMessage: "Nouveau message",
     familyNetwork: "Réseau familial",
     moderationNotice: "🤖 Les messages sont examinés par l'IA pour maintenir un espace sûr et respectueux.",
+    yourCaseworkers: "Vos intervenants",
+    privateMessage: "Message privé",
   },
 
   chatbot: {
