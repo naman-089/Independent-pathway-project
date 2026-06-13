@@ -127,9 +127,8 @@ export default function CommunityPage() {
             {t("community.title")}
           </span>
           <button
-            className="pencil-btn"
+            className="pencil-btn community-sidebar-close"
             onClick={() => setSidebarOpen(false)}
-            style={{ display: "none" }}
             aria-label="Close sidebar"
           >
             ✕
@@ -195,8 +194,7 @@ export default function CommunityPage() {
         <div className="community-chat-header">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <button
-              className="pencil-btn"
-              style={{ display: "none" }}
+              className="pencil-btn community-sidebar-toggle"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open conversations"
             >

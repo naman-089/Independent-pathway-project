@@ -800,6 +800,10 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; }
   color: var(--danger); font-size: 0.8125rem; font-weight: 500;
   border-top: 1px solid rgba(220,38,38,0.15);
 }
+.community-sidebar-toggle,
+.community-sidebar-close {
+  display: none;
+}
 
 /* ── TEXT-TO-SPEECH BUTTON ── */
 .tts-btn {
@@ -1058,7 +1062,46 @@ h1, h2, h3, h4, h5 { word-break: break-word; }
   /* Community DM — full width on mobile */
   .community-layout { grid-template-columns: 1fr; }
   .community-sidebar { display: none; }
-  .community-sidebar.mobile-open { display: flex; position: fixed; inset: 0; z-index: 200; }
+  .community-sidebar.mobile-open {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    width: 100%;
+    height: 100vh;
+  }
+  .community-sidebar-toggle,
+  .community-sidebar-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .community-sidebar-toggle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--navy);
+    flex-shrink: 0;
+  }
+  .community-sidebar-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--off);
+    color: var(--navy);
+    flex-shrink: 0;
+  }
+  .community-chat-header {
+    padding: 14px 16px;
+  }
+  .community-messages,
+  .community-input-row {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 
   .footer-grid { grid-template-columns: 1fr 1fr; }
   .footer-bottom { flex-direction: column; align-items: flex-start; }
