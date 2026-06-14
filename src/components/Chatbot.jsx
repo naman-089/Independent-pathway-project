@@ -52,11 +52,15 @@ export default function Chatbot() {
         body: JSON.stringify({ messages: apiMessages }),
       });
       const data = await res.json();
+      if (!res.ok || data.error) {
+        console.error("[chatbot] API error", res.status, data.error || data);
+      }
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: data.text || t("chatbot.error") },
       ]);
-    } catch {
+    } catch (err) {
+      console.error("[chatbot] fetch failed", err);
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: t("chatbot.error") },

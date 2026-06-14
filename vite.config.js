@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import "dotenv/config";
 
 // Vite plugin that handles /api/chat locally so `npm run dev` works without
 // Vercel CLI. In production, Vercel routes /api/* to the real serverless function.
@@ -64,7 +65,13 @@ function localApiPlugin() {
               }),
             });
             const data = await upstream.json();
-            res.writeHead(upstream.status, { "content-type": "application/json" });
+            if (!upstream.ok) {
+              console.error("[/api/chat] Anthropic error", upstream.status, JSON.stringify(data));
+              res.writeHead(upstream.status, { "content-type": "application/json" });
+              res.end(JSON.stringify({ error: data.error?.message || "Upstream error" }));
+              return;
+            }
+            res.writeHead(200, { "content-type": "application/json" });
             res.end(JSON.stringify({ text: data.content?.[0]?.text || "" }));
           } catch (err) {
             res.writeHead(500, { "content-type": "application/json" });
