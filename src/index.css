@@ -31,8 +31,8 @@
 
 /* ── Font zoom levels (set via data-zoom="1|2|3" on <html>) ── */
 html { font-size: 16px; }
-html[data-zoom="2"] { font-size: 18px; }
-html[data-zoom="3"] { font-size: 20px; }
+html[data-zoom="2"] { font-size: 21px; }
+html[data-zoom="3"] { font-size: 26px; }
 
 html, body, #root {
   font-family: 'Inter', sans-serif;
@@ -166,16 +166,16 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; }
   flex-shrink: 0; margin-left: 4px;
 }
 .font-zoom-btn {
-  padding: 3px 8px; border: none; background: transparent;
+  padding: 5px 10px; border: none; background: transparent;
   color: var(--gray); font-family: 'Inter', sans-serif;
   font-weight: 700; border-radius: 50px; cursor: pointer;
   transition: all 0.2s; line-height: 1.4;
 }
 .font-zoom-btn:hover { color: var(--white); }
 .font-zoom-btn.active { background: var(--accent); color: var(--navy); }
-.font-zoom-btn:nth-child(1) { font-size: 10px; }
-.font-zoom-btn:nth-child(2) { font-size: 13px; }
-.font-zoom-btn:nth-child(3) { font-size: 16px; }
+.font-zoom-btn:nth-child(1) { font-size: 12px; }
+.font-zoom-btn:nth-child(2) { font-size: 16px; }
+.font-zoom-btn:nth-child(3) { font-size: 20px; }
 
 /* ── LANGUAGE DROPDOWN ── */
 .lang-select-wrap {
@@ -203,6 +203,10 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; }
   background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); color: var(--text);
 }
 .lang-select-wrap.on-light .lang-select-arrow { color: var(--text-muted); }
+
+/* ── APP SHELL LAYOUT ── */
+.app-layout { display: flex; flex-direction: column; min-height: 100vh; }
+.app-main   { flex: 1; }
 
 /* ── PAGE LAYOUT ── */
 .page { max-width: 960px; margin: 0 auto; padding: 36px 32px; animation: pageIn 0.3s ease; }
@@ -808,7 +812,7 @@ button { cursor: pointer; font-family: 'Inter', sans-serif; }
 /* ── TEXT-TO-SPEECH BUTTON ── */
 .tts-btn {
   position: fixed; bottom: 24px; left: 24px;
-  width: 48px; height: 48px; border-radius: 50%;
+  width: 62px; height: 62px; border-radius: 50%;
   background: var(--navy); color: var(--white);
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;

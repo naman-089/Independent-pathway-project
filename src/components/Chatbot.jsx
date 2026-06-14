@@ -83,14 +83,14 @@ export default function Chatbot() {
           position: "fixed",
           bottom: 24,
           right: 24,
-          width: 52,
-          height: 52,
+          width: 68,
+          height: 68,
           borderRadius: "50%",
           background: "#02C39A",
           color: "#fff",
           border: "none",
           cursor: "pointer",
-          fontSize: open ? 18 : 24,
+          fontSize: open ? 22 : 30,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -110,10 +110,10 @@ export default function Chatbot() {
         <div
           style={{
             position: "fixed",
-            bottom: 88,
+            bottom: 108,
             right: 24,
-            width: 340,
-            height: 480,           /* fixed height so flex children can scroll */
+            width: 420,
+            height: 560,           /* fixed height so flex children can scroll */
             background: "#ffffff", /* explicit white — no CSS var dependency */
             borderRadius: 16,
             boxShadow: "0 8px 40px rgba(0,0,0,0.22)",

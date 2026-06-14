@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { LanguageProvider } from "./hooks/useLanguage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -31,6 +31,12 @@ const CaseworkerCommunityPage  = lazy(() => import("./pages/caseworker/Caseworke
 const AdminDashboard      = lazy(() => import("./pages/admin/AdminDashboard"));
 const ResourceDirectory   = lazy(() => import("./pages/admin/ResourceDirectory"));
 const UsersPage           = lazy(() => import("./pages/admin/UsersPage"));
+
+function ConditionalFooter() {
+  const { pathname } = useLocation();
+  if (pathname.endsWith("/community")) return null;
+  return <Footer />;
+}
 
 function AppShell() {
   const [splashDone, setSplashDone] = useState(() => sessionStorage.getItem("splashDone") === "1");
@@ -62,52 +68,64 @@ function AppShell() {
           {/* Family */}
           <Route path="/family/*" element={
             <ProtectedRoute allowedRoles={["family"]}>
-              <Nav />
-              <Routes>
-                <Route index              element={<FamilyHome />} />
-                <Route path="intake"      element={<IntakePage />} />
-                <Route path="timeline"    element={<TimelinePage />} />
-                <Route path="portfolio"   element={<PortfolioPage />} />
-                <Route path="resources"   element={<ResourcesPage />} />
-                <Route path="community"   element={<CommunityPage />} />
-                <Route path="profile"     element={<ProfilePage />} />
-              </Routes>
-              <Footer />
-              <Chatbot />
-              <TextToSpeech />
+              <div className="app-layout">
+                <Nav />
+                <div className="app-main">
+                  <Routes>
+                    <Route index              element={<FamilyHome />} />
+                    <Route path="intake"      element={<IntakePage />} />
+                    <Route path="timeline"    element={<TimelinePage />} />
+                    <Route path="portfolio"   element={<PortfolioPage />} />
+                    <Route path="resources"   element={<ResourcesPage />} />
+                    <Route path="community"   element={<CommunityPage />} />
+                    <Route path="profile"     element={<ProfilePage />} />
+                  </Routes>
+                </div>
+                <ConditionalFooter />
+                <Chatbot />
+                <TextToSpeech />
+              </div>
             </ProtectedRoute>
           } />
 
           {/* Caseworker */}
           <Route path="/caseworker/*" element={
             <ProtectedRoute allowedRoles={["caseworker"]}>
-              <Nav />
-              <Routes>
-                <Route index                element={<CaseworkerDashboard />} />
-                <Route path="families"      element={<FamiliesList />} />
-                <Route path="families/:uid" element={<FamilyDetail />} />
-                <Route path="matches"       element={<MatchesOverview />} />
-                <Route path="community"     element={<CaseworkerCommunityPage />} />
-                <Route path="profile"       element={<ProfilePage />} />
-              </Routes>
-              <Footer />
-              <Chatbot />
-              <TextToSpeech />
+              <div className="app-layout">
+                <Nav />
+                <div className="app-main">
+                  <Routes>
+                    <Route index                element={<CaseworkerDashboard />} />
+                    <Route path="families"      element={<FamiliesList />} />
+                    <Route path="families/:uid" element={<FamilyDetail />} />
+                    <Route path="matches"       element={<MatchesOverview />} />
+                    <Route path="community"     element={<CaseworkerCommunityPage />} />
+                    <Route path="profile"       element={<ProfilePage />} />
+                  </Routes>
+                </div>
+                <ConditionalFooter />
+                <Chatbot />
+                <TextToSpeech />
+              </div>
             </ProtectedRoute>
           } />
 
           {/* Admin */}
           <Route path="/admin/*" element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <Nav />
-              <Routes>
-                <Route index             element={<AdminDashboard />} />
-                <Route path="resources"  element={<ResourceDirectory />} />
-                <Route path="users"      element={<UsersPage />} />
-                <Route path="profile"    element={<ProfilePage />} />
-              </Routes>
-              <Footer />
-              <TextToSpeech />
+              <div className="app-layout">
+                <Nav />
+                <div className="app-main">
+                  <Routes>
+                    <Route index             element={<AdminDashboard />} />
+                    <Route path="resources"  element={<ResourceDirectory />} />
+                    <Route path="users"      element={<UsersPage />} />
+                    <Route path="profile"    element={<ProfilePage />} />
+                  </Routes>
+                </div>
+                <Footer />
+                <TextToSpeech />
+              </div>
             </ProtectedRoute>
           } />
 

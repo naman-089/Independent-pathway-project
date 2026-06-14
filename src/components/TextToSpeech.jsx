@@ -58,7 +58,7 @@ export default function TextToSpeech() {
       title={speaking ? "Stop reading" : "Read page aloud"}
       aria-label={speaking ? "Stop reading aloud" : "Read page aloud"}
     >
-      {speaking ? <IconPlayerStop size={20} /> : <IconVolume size={20} />}
+      {speaking ? <IconPlayerStop size={26} /> : <IconVolume size={26} />}
     </button>
   );
 }
