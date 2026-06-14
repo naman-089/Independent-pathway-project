@@ -1,6 +1,5 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import "dotenv/config";
 
 // Vite plugin that handles /api/chat locally so `npm run dev` works without
 // Vercel CLI. In production, Vercel routes /api/* to the real serverless function.
@@ -83,21 +82,28 @@ function localApiPlugin() {
   };
 }
 
-export default defineConfig({
-  plugins: [react(), localApiPlugin()],
-  build: {
-    rollupOptions: {
-      output: {
-        // Split large, slow-changing vendor libs into their own chunks so
-        // browsers can cache and parallel-fetch them independently of app code.
-        manualChunks: {
-          react:     ["react", "react-dom", "react-router-dom"],
-          "fb-app":  ["firebase/app"],
-          "fb-auth": ["firebase/auth"],
-          "fb-db":   ["firebase/firestore"],
-          icons:     ["@tabler/icons-react"],
+export default defineConfig(({ mode }) => {
+  // loadEnv with empty prefix loads ALL .env vars (not just VITE_-prefixed ones).
+  // We then inject the server-only vars into process.env so the local API middleware can read them.
+  const env = loadEnv(mode, process.cwd(), "");
+  process.env.ANTHROPIC_API_KEY    ??= env.ANTHROPIC_API_KEY;
+  process.env.AI_CHATBOT_ENABLED   ??= env.AI_CHATBOT_ENABLED;
+  process.env.FIREBASE_API_KEY     ??= env.FIREBASE_API_KEY;
+
+  return {
+    plugins: [react(), localApiPlugin()],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            react:     ["react", "react-dom", "react-router-dom"],
+            "fb-app":  ["firebase/app"],
+            "fb-auth": ["firebase/auth"],
+            "fb-db":   ["firebase/firestore"],
+            icons:     ["@tabler/icons-react"],
+          },
         },
       },
     },
-  },
+  };
 });
