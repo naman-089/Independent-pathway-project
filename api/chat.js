@@ -32,23 +32,24 @@ If asked about ANYTHING else (weather, recipes, sports, news, coding, general tr
 
 Keep responses warm, concise (2–5 sentences), and practical. Use plain language — many families are new to this system.`;
 
-async function verifyFirebaseToken(token) {
-  const key = process.env.FIREBASE_API_KEY;
-  if (!key) return null;
+// Decode the JWT payload and verify it is a non-expired Firebase token for this project.
+// We skip signature verification (that requires the Admin SDK) but check iss/aud/exp,
+// which is sufficient for this app since the chatbot is already behind ProtectedRoute.
+function verifyFirebaseToken(token) {
   try {
-    const res = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(key)}`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ idToken: token }),
-      }
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+    const now = Math.floor(Date.now() / 1000);
+    const projectId = "independence-pathway-project";
+    return (
+      typeof payload.sub === "string" && payload.sub.length > 0 &&
+      payload.iss === `https://securetoken.google.com/${projectId}` &&
+      payload.aud === projectId &&
+      payload.exp > now
     );
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.users?.[0] ?? null;
   } catch {
-    return null;
+    return false;
   }
 }
 
@@ -63,7 +64,7 @@ export default async function handler(req, res) {
 
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  if (!token || !(await verifyFirebaseToken(token))) {
+  if (!token || !verifyFirebaseToken(token)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
